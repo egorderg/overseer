@@ -1,0 +1,4 @@
+[tools]
+"github:anomalyco/opencode" = "1.1.53"
+node = "24"
+"npm:@fission-ai/openspec" = "1.2.0"

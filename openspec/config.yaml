@@ -1,0 +1,26 @@
+schema: spec-driven
+
+context: |
+  Tech stack: TypeScript, React, Tailwind, Node.js, Electron
+  Domain: AI first development ide
+  Its a ide with support for multiple projects in a workspace like environment. Each project points to a folder.
+  The app is controlled via a central config file and the current layout of workspaces and projects is saved also in a central file.
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Example:
+#   context: |
+#     Tech stack: TypeScript, React, Node.js
+#     We use conventional commits
+#     Domain: e-commerce platform
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours

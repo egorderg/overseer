@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============================================================================
+   Design System — CSS Custom Properties
+   Primary color: #6366F1 (Indigo 500)
+   ============================================================================= */
+
+:root {
+	/* --- Font --- */
+	--font-sans: "IBM Plex Sans", "Segoe UI", sans-serif;
+
+	/* --- Primary --- */
+	--color-primary: #6366f1;
+	--color-primary-hover: #4f46e5;
+	--color-primary-subtle: #eef2ff;
+
+	/* --- Backgrounds --- */
+	--color-surface: #ffffff;
+	--color-surface-raised: #1e293b;
+	--color-surface-muted: #f8fafc;
+
+	/* --- Borders --- */
+	--color-border: #e2e8f0;
+	--color-border-strong: #cbd5e1;
+
+	/* --- Text --- */
+	--color-text: #0f172a;
+	--color-text-muted: #475569;
+	--color-text-subtle: #64748b;
+	--color-text-on-raised: #f1f5f9;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		/* --- Primary --- */
+		--color-primary: #818cf8;
+		--color-primary-hover: #6366f1;
+		--color-primary-subtle: #1e1b4b;
+
+		/* --- Backgrounds --- */
+		--color-surface: #1e293b;
+		--color-surface-raised: #0f172a;
+		--color-surface-muted: #273344;
+
+		/* --- Borders --- */
+		--color-border: #334155;
+		--color-border-strong: #475569;
+
+		/* --- Text --- */
+		--color-text: #f1f5f9;
+		--color-text-muted: #94a3b8;
+		--color-text-subtle: #64748b;
+		--color-text-on-raised: #cbd5e1;
+	}
+}
+
+/* =============================================================================
+   Base Styles
+   ============================================================================= */
+
+body {
+	margin: 0;
+	font-family: var(--font-sans);
+	background: linear-gradient(180deg, #f9fafb 0%, #eef2ff 100%);
+	color: var(--color-text);
+}
+
+@media (prefers-color-scheme: dark) {
+	body {
+		background: linear-gradient(180deg, #0f172a 0%, #1a1033 100%);
+	}
+}
