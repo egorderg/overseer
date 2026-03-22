@@ -1,6 +1,8 @@
 import path from "node:path";
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { IPC_CHANNELS } from "./contracts";
+import { GitError, isGitRepository } from "./git";
+import { getDiff } from "./git-diff";
 import {
 	addWorkspaceProject,
 	readWorkspaceProjects,
@@ -85,6 +87,37 @@ ipcMain.handle(IPC_CHANNELS.addWorkspaceProject, async () => {
 			code: "persist-failed",
 			error: "Unexpected error while adding project.",
 		};
+	}
+});
+
+ipcMain.handle(IPC_CHANNELS.getDiff, async (_event, projectPath: string) => {
+	const isRepo = await isGitRepository(projectPath);
+	if (!isRepo) {
+		return {
+			ok: false,
+			code: "not-a-repo",
+			error: "Not a git repository.",
+		} as const;
+	}
+
+	try {
+		const diff = await getDiff(projectPath);
+		return { ok: true, diff } as const;
+	} catch (error) {
+		if (error instanceof GitError) {
+			if (error.code === 127 || error.stderr.includes("not found")) {
+				return {
+					ok: false,
+					code: "git-not-found",
+					error: "Git is not installed or not in PATH.",
+				} as const;
+			}
+		}
+		return {
+			ok: false,
+			code: "unknown",
+			error: error instanceof Error ? error.message : "Unknown error",
+		} as const;
 	}
 });
 
