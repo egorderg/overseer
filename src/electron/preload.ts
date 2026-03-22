@@ -11,6 +11,7 @@ const APP_INFO_CHANNEL = "app:info";
 const WORKSPACE_PROJECTS_CHANNEL = "workspace:projects:list";
 const ADD_WORKSPACE_PROJECT_CHANNEL = "workspace:projects:add";
 const GET_DIFF_CHANNEL = "git:diff";
+const GET_CURRENT_BRANCH_CHANNEL = "git:current-branch";
 
 const api: WindowApi = {
 	getAppInfo: () => ipcRenderer.invoke(APP_INFO_CHANNEL) as Promise<AppInfo>,
@@ -24,6 +25,10 @@ const api: WindowApi = {
 		) as Promise<AddWorkspaceProjectResult>,
 	getDiff: (projectPath: string) =>
 		ipcRenderer.invoke(GET_DIFF_CHANNEL, projectPath) as Promise<GetDiffResult>,
+	getCurrentBranch: (projectPath: string) =>
+		ipcRenderer.invoke(GET_CURRENT_BRANCH_CHANNEL, projectPath) as Promise<
+			string | null
+		>,
 };
 
 try {
@@ -51,6 +56,12 @@ try {
 		);
 	}
 
+	if (typeof api.getCurrentBranch !== "function") {
+		throw new Error(
+			"[preload] Invalid API contract: getCurrentBranch must be a function.",
+		);
+	}
+
 	contextBridge.exposeInMainWorld("overseer", api);
 } catch (error) {
 	const detail = error instanceof Error ? error.message : String(error);
@@ -61,6 +72,7 @@ try {
 			"getWorkspaceProjects",
 			"addWorkspaceProject",
 			"getDiff",
+			"getCurrentBranch",
 		],
 		channel: APP_INFO_CHANNEL,
 	});

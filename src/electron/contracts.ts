@@ -3,4 +3,5 @@ export const IPC_CHANNELS = {
 	getWorkspaceProjects: "workspace:projects:list",
 	addWorkspaceProject: "workspace:projects:add",
 	getDiff: "git:diff",
+	getCurrentBranch: "git:current-branch",
 } as const;

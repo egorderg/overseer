@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MainContent } from "./components/MainContent";
 import { ProjectsSidebar } from "./components/ProjectsSidebar";
 import {
@@ -17,6 +17,7 @@ export function App({ title }: AppProps) {
 	const loadProjects = useLoadProjects();
 	const currentView = useCurrentView();
 	const selectedView = useSelectedView();
+	const [currentBranch, setCurrentBranch] = useState<string | null>(null);
 
 	useEffect(() => {
 		let isMounted = true;
@@ -41,6 +42,42 @@ export function App({ title }: AppProps) {
 		};
 	}, [loadProjects]);
 
+	useEffect(() => {
+		let isMounted = true;
+
+		async function fetchBranch(): Promise<void> {
+			if (
+				selectedView !== "diff" ||
+				!currentView ||
+				typeof window.overseer?.getCurrentBranch !== "function"
+			) {
+				if (isMounted) {
+					setCurrentBranch(null);
+				}
+				return;
+			}
+
+			try {
+				const branch = await window.overseer.getCurrentBranch(
+					currentView.project.path,
+				);
+				if (isMounted) {
+					setCurrentBranch(branch);
+				}
+			} catch {
+				if (isMounted) {
+					setCurrentBranch(null);
+				}
+			}
+		}
+
+		void fetchBranch();
+
+		return () => {
+			isMounted = false;
+		};
+	}, [selectedView, currentView]);
+
 	async function handleAddProject(): Promise<void> {
 		if (typeof window.overseer?.addWorkspaceProject !== "function") {
 			console.error("Add Project is unavailable in the current runtime.");
@@ -57,10 +94,15 @@ export function App({ title }: AppProps) {
 		}
 	}
 
-	const viewTitle = currentView
+	const baseTitle = currentView
 		? (currentView.project.views.find((v) => v.id === selectedView)?.label ??
 			title)
 		: title;
+
+	const viewTitle =
+		selectedView === "diff" && currentBranch
+			? `${baseTitle} — ${currentBranch}`
+			: baseTitle;
 
 	return (
 		<main className="flex h-screen overflow-hidden bg-surface-muted text-text">

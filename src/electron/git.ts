@@ -56,3 +56,17 @@ export async function isGitRepository(dir: string): Promise<boolean> {
 		return false;
 	}
 }
+
+export async function getCurrentBranch(dir: string): Promise<string | null> {
+	try {
+		const { stdout } = await runGitCommand(dir, [
+			"rev-parse",
+			"--abbrev-ref",
+			"HEAD",
+		]);
+		const branch = stdout.trim();
+		return branch || null;
+	} catch {
+		return null;
+	}
+}

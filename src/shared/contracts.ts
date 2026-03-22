@@ -61,4 +61,5 @@ export interface WindowApi {
 	getWorkspaceProjects: () => Promise<WorkspaceProject[]>;
 	addWorkspaceProject: () => Promise<AddWorkspaceProjectResult>;
 	getDiff: (projectPath: string) => Promise<GetDiffResult>;
+	getCurrentBranch: (projectPath: string) => Promise<string | null>;
 }

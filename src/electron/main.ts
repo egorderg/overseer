@@ -1,7 +1,7 @@
 import path from "node:path";
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { IPC_CHANNELS } from "./contracts";
-import { GitError, isGitRepository } from "./git";
+import { GitError, getCurrentBranch, isGitRepository } from "./git";
 import { getDiff } from "./git-diff";
 import {
 	addWorkspaceProject,
@@ -120,6 +120,14 @@ ipcMain.handle(IPC_CHANNELS.getDiff, async (_event, projectPath: string) => {
 		} as const;
 	}
 });
+
+ipcMain.handle(
+	IPC_CHANNELS.getCurrentBranch,
+	async (_event, projectPath: string) => {
+		const branch = await getCurrentBranch(projectPath);
+		return branch;
+	},
+);
 
 app.whenReady().then(() => {
 	createWindow();

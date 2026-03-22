@@ -1,10 +1,16 @@
 import { useEffect, useState } from "react";
 import type { DiffFile, DiffLine, DiffResult } from "../../shared/contracts";
 
+const EXPANDED_LINE_THRESHOLD = 500;
+
 type ViewState =
 	| { status: "loading" }
 	| { status: "error"; code: string; message: string }
 	| { status: "success"; diff: DiffResult };
+
+function getFileLineCount(file: DiffFile): number {
+	return file.hunks.reduce((sum, hunk) => sum + hunk.lines.length, 0);
+}
 
 function DiffLineRow({ line }: { line: DiffLine }) {
 	const isDelete = line.type === "delete";
@@ -193,7 +199,13 @@ export function DiffView({ projectPath }: { projectPath: string }) {
 
 				if (result.ok) {
 					setState({ status: "success", diff: result.diff });
-					setExpandedFiles(new Set(result.diff.files.map((f) => f.path)));
+					setExpandedFiles(
+						new Set(
+							result.diff.files
+								.filter((f) => getFileLineCount(f) <= EXPANDED_LINE_THRESHOLD)
+								.map((f) => f.path),
+						),
+					);
 				} else {
 					setState({
 						status: "error",
