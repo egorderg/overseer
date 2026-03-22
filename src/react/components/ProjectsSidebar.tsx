@@ -8,13 +8,9 @@ import type { ProjectState } from "../store/types";
 
 type ProjectsSidebarProps = {
 	projects: ProjectState[];
-	onAddProject: () => void;
 };
 
-export function ProjectsSidebar({
-	projects,
-	onAddProject,
-}: ProjectsSidebarProps) {
+export function ProjectsSidebar({ projects }: ProjectsSidebarProps) {
 	const toggleProject = useToggleProject();
 	const selectView = useSelectView();
 	const selectedProjectPath = useSelectedProjectPath();
@@ -97,16 +93,6 @@ export function ProjectsSidebar({
 					))
 				)}
 			</ul>
-
-			<div className="mt-auto">
-				<button
-					type="button"
-					onClick={onAddProject}
-					className="w-full rounded-md px-3 py-2 text-sm font-medium text-primary transition hover:bg-surface-muted"
-				>
-					Add Project
-				</button>
-			</div>
 		</aside>
 	);
 }

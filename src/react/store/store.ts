@@ -13,41 +13,6 @@ const createInitialState = (): AppState => ({
 export const useAppStore = create<AppStore>((set, get) => ({
 	...createInitialState(),
 
-	loadProjects: (projects) => {
-		const state = get();
-		const newProjects: Record<string, AppState["projects"][string]> = {};
-
-		for (const project of projects) {
-			if (state.projects[project.path]) {
-				newProjects[project.path] = state.projects[project.path];
-				continue;
-			}
-
-			newProjects[project.path] = {
-				path: project.path,
-				name: project.name,
-				expanded: false,
-				views: [
-					{ id: "explorer", label: "Explorer", type: "explorer" },
-					{ id: "diff", label: "Diff", type: "diff" },
-				],
-				viewStates: {
-					explorer: {
-						expandedFolders: [],
-						selectedFile: null,
-					},
-					diff: {
-						leftFile: "",
-						rightFile: "",
-					},
-					terminals: {},
-				},
-			};
-		}
-
-		set({ projects: newProjects });
-	},
-
 	loadConfig: (projects: ConfigProject[]) => {
 		const newProjects: Record<string, AppState["projects"][string]> = {};
 

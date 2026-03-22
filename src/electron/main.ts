@@ -4,11 +4,6 @@ import { ConfigLoaderError, loadAndValidateConfig } from "./config-loader";
 import { IPC_CHANNELS } from "./contracts";
 import { GitError, getCurrentBranch, isGitRepository } from "./git";
 import { getDiff } from "./git-diff";
-import {
-	addWorkspaceProject,
-	readWorkspaceProjects,
-	WorkspaceError,
-} from "./workspace";
 
 const DEV_SERVER_URL =
 	process.env.ELECTRON_RENDERER_URL ?? "http://localhost:5173";
@@ -52,44 +47,6 @@ ipcMain.handle(IPC_CHANNELS.appInfo, () => ({
 	version: app.getVersion(),
 	platform: process.platform,
 }));
-
-ipcMain.handle(IPC_CHANNELS.getWorkspaceProjects, async () => {
-	return readWorkspaceProjects(app.getPath("home"));
-});
-
-ipcMain.handle(IPC_CHANNELS.addWorkspaceProject, async () => {
-	const dialogOwner =
-		BrowserWindow.getFocusedWindow() ??
-		BrowserWindow.getAllWindows()[0] ??
-		null;
-
-	const { canceled, filePaths } = await dialog.showOpenDialog(dialogOwner, {
-		properties: ["openDirectory"],
-		title: "Select project folder",
-	});
-
-	if (canceled || filePaths.length === 0) {
-		return {
-			ok: false,
-			code: "cancelled",
-			error: "Folder selection cancelled.",
-		};
-	}
-
-	try {
-		const added = await addWorkspaceProject(filePaths[0], app.getPath("home"));
-		return { ok: true, ...added };
-	} catch (error) {
-		if (error instanceof WorkspaceError) {
-			return { ok: false, code: error.code, error: error.message };
-		}
-		return {
-			ok: false,
-			code: "persist-failed",
-			error: "Unexpected error while adding project.",
-		};
-	}
-});
 
 ipcMain.handle(IPC_CHANNELS.loadConfig, async () => {
 	const dialogOwner =

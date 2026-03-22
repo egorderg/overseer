@@ -6,8 +6,6 @@ export const useProjects = () => useAppStore((state) => state.projects);
 export const useProject = (projectPath: string): ProjectState | undefined =>
 	useAppStore((state) => state.projects[projectPath]);
 
-export const useLoadProjects = () => useAppStore((state) => state.loadProjects);
-
 export const useLoadConfig = () => useAppStore((state) => state.loadConfig);
 
 export const useToggleProject = () =>

@@ -39,27 +39,6 @@ export function App({ title }: AppProps) {
 		}
 	}
 
-	async function handleAddProject(): Promise<void> {
-		if (typeof window.overseer?.addWorkspaceProject !== "function") {
-			console.error("Add Project is unavailable in the current runtime.");
-			return;
-		}
-
-		try {
-			const result = await window.overseer.addWorkspaceProject();
-			if (result.ok) {
-				loadConfig(
-					result.projects.map((p) => ({
-						path: p.path,
-						name: p.name,
-					})),
-				);
-			}
-		} catch {
-			console.error("Unable to add project right now.");
-		}
-	}
-
 	const baseTitle = currentView
 		? (currentView.project.views.find((v) => v.id === selectedView)?.label ??
 			title)
@@ -79,12 +58,7 @@ export function App({ title }: AppProps) {
 
 	return (
 		<main className="flex h-screen overflow-hidden bg-surface-muted text-text">
-			<ProjectsSidebar
-				projects={Object.values(projects)}
-				onAddProject={() => {
-					void handleAddProject();
-				}}
-			/>
+			<ProjectsSidebar projects={Object.values(projects)} />
 
 			<section className="flex min-h-0 flex-1 flex-col overflow-hidden">
 				<div className="border-b border-border px-8 py-3">

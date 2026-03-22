@@ -1,4 +1,4 @@
-import type { ConfigProject, WorkspaceProject } from "../../shared/contracts";
+import type { ConfigProject } from "../../shared/contracts";
 
 export type ProjectView =
 	| { id: "explorer"; label: "Explorer"; type: "explorer" }
@@ -44,7 +44,6 @@ export interface AppState {
 }
 
 export interface AppActions {
-	loadProjects: (projects: WorkspaceProject[]) => void;
 	loadConfig: (projects: ConfigProject[]) => void;
 	toggleProject: (projectPath: string) => void;
 	selectView: (projectPath: string, viewId: string) => void;

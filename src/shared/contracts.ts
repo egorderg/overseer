@@ -4,11 +4,6 @@ export interface AppInfo {
 	platform: string;
 }
 
-export interface WorkspaceProject {
-	name: string;
-	path: string;
-}
-
 export interface ConfigProject {
 	path: string;
 	name: string;
@@ -25,18 +20,6 @@ export interface ConfigFile {
 export type LoadConfigResult =
 	| { ok: true; config: ConfigFile }
 	| { ok: false; error: string };
-
-export type AddWorkspaceProjectResult =
-	| {
-			ok: true;
-			project: WorkspaceProject;
-			projects: WorkspaceProject[];
-	  }
-	| {
-			ok: false;
-			code: "cancelled" | "duplicate" | "invalid-path" | "persist-failed";
-			error: string;
-	  };
 
 export interface DiffLine {
 	type: "context" | "add" | "delete";
@@ -75,8 +58,6 @@ export type GetDiffResult =
 
 export interface WindowApi {
 	getAppInfo: () => Promise<AppInfo>;
-	getWorkspaceProjects: () => Promise<WorkspaceProject[]>;
-	addWorkspaceProject: () => Promise<AddWorkspaceProjectResult>;
 	loadConfig: () => Promise<LoadConfigResult>;
 	getDiff: (projectPath: string) => Promise<GetDiffResult>;
 	getCurrentBranch: (projectPath: string) => Promise<string | null>;
