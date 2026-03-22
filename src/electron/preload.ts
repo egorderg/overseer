@@ -3,6 +3,7 @@ import {
 	type AddWorkspaceProjectResult,
 	type AppInfo,
 	type GetDiffResult,
+	type LoadConfigResult,
 	type WindowApi,
 	type WorkspaceProject,
 } from "../shared/contracts";
@@ -10,6 +11,7 @@ import {
 const APP_INFO_CHANNEL = "app:info";
 const WORKSPACE_PROJECTS_CHANNEL = "workspace:projects:list";
 const ADD_WORKSPACE_PROJECT_CHANNEL = "workspace:projects:add";
+const LOAD_CONFIG_CHANNEL = "config:load";
 const GET_DIFF_CHANNEL = "git:diff";
 const GET_CURRENT_BRANCH_CHANNEL = "git:current-branch";
 
@@ -23,6 +25,8 @@ const api: WindowApi = {
 		ipcRenderer.invoke(
 			ADD_WORKSPACE_PROJECT_CHANNEL,
 		) as Promise<AddWorkspaceProjectResult>,
+	loadConfig: () =>
+		ipcRenderer.invoke(LOAD_CONFIG_CHANNEL) as Promise<LoadConfigResult>,
 	getDiff: (projectPath: string) =>
 		ipcRenderer.invoke(GET_DIFF_CHANNEL, projectPath) as Promise<GetDiffResult>,
 	getCurrentBranch: (projectPath: string) =>
@@ -50,6 +54,12 @@ try {
 		);
 	}
 
+	if (typeof api.loadConfig !== "function") {
+		throw new Error(
+			"[preload] Invalid API contract: loadConfig must be a function.",
+		);
+	}
+
 	if (typeof api.getDiff !== "function") {
 		throw new Error(
 			"[preload] Invalid API contract: getDiff must be a function.",
@@ -71,6 +81,7 @@ try {
 			"getAppInfo",
 			"getWorkspaceProjects",
 			"addWorkspaceProject",
+			"loadConfig",
 			"getDiff",
 			"getCurrentBranch",
 		],

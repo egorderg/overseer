@@ -1,0 +1,79 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://overseer.app/schemas/config.json",
+	"title": "Overseer Configuration",
+	"description": "Configuration file for Overseer IDE workspace",
+	"type": "object",
+	"required": ["projects"],
+	"properties": {
+		"projects": {
+			"type": "array",
+			"description": "List of projects in the workspace",
+			"items": {
+				"$ref": "#/$defs/project"
+			}
+		}
+	},
+	"$defs": {
+		"project": {
+			"type": "object",
+			"required": ["path", "name"],
+			"properties": {
+				"path": {
+					"type": "string",
+					"description": "Absolute path to the project directory",
+					"examples": ["/home/user/projects/my-app"]
+				},
+				"name": {
+					"type": "string",
+					"description": "Display name for the project",
+					"examples": ["my-app"]
+				},
+				"explorer": {
+					"$ref": "#/$defs/viewConfig",
+					"description": "Explorer view configuration"
+				},
+				"diff": {
+					"$ref": "#/$defs/viewConfig",
+					"description": "Diff view configuration"
+				},
+				"terminals": {
+					"type": "array",
+					"description": "Terminal views for this project",
+					"items": {
+						"$ref": "#/$defs/terminal"
+					}
+				},
+				"collapsed": {
+					"type": "boolean",
+					"description": "Whether the project is collapsed in the sidebar",
+					"default": false
+				}
+			},
+			"additionalProperties": false
+		},
+		"viewConfig": {
+			"type": "object",
+			"properties": {
+				"enabled": {
+					"type": "boolean",
+					"description": "Whether this view is shown for the project",
+					"default": true
+				}
+			},
+			"additionalProperties": false
+		},
+		"terminal": {
+			"type": "object",
+			"required": ["name"],
+			"properties": {
+				"name": {
+					"type": "string",
+					"description": "Display name for the terminal tab",
+					"examples": ["Build", "Test", "Server"]
+				}
+			},
+			"additionalProperties": false
+		}
+	}
+}

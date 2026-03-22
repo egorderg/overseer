@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { EmptyState } from "./components/EmptyState";
 import { MainContent } from "./components/MainContent";
 import { ProjectsSidebar } from "./components/ProjectsSidebar";
 import {
 	useCurrentView,
-	useLoadProjects,
+	useLoadConfig,
 	useProjects,
 	useSelectedView,
 } from "./store/selectors";
@@ -14,69 +15,29 @@ type AppProps = {
 
 export function App({ title }: AppProps) {
 	const projects = useProjects();
-	const loadProjects = useLoadProjects();
+	const loadConfig = useLoadConfig();
 	const currentView = useCurrentView();
 	const selectedView = useSelectedView();
-	const [currentBranch, setCurrentBranch] = useState<string | null>(null);
+	const [configError, setConfigError] = useState<string | null>(null);
 
-	useEffect(() => {
-		let isMounted = true;
-
-		async function loadStartupData(): Promise<void> {
-			try {
-				if (typeof window.overseer?.getWorkspaceProjects === "function") {
-					const nextProjects = await window.overseer.getWorkspaceProjects();
-					if (isMounted) {
-						loadProjects(nextProjects);
-					}
-				}
-			} catch {
-				console.error("Unable to load workspace projects.");
-			}
+	async function handleLoadConfig(): Promise<void> {
+		if (typeof window.overseer?.loadConfig !== "function") {
+			setConfigError("Load Config is unavailable in the current runtime.");
+			return;
 		}
 
-		void loadStartupData();
-
-		return () => {
-			isMounted = false;
-		};
-	}, [loadProjects]);
-
-	useEffect(() => {
-		let isMounted = true;
-
-		async function fetchBranch(): Promise<void> {
-			if (
-				selectedView !== "diff" ||
-				!currentView ||
-				typeof window.overseer?.getCurrentBranch !== "function"
-			) {
-				if (isMounted) {
-					setCurrentBranch(null);
-				}
-				return;
+		try {
+			const result = await window.overseer.loadConfig();
+			if (result.ok) {
+				loadConfig(result.config.projects);
+				setConfigError(null);
+			} else if (result.error !== "Cancelled") {
+				setConfigError(result.error);
 			}
-
-			try {
-				const branch = await window.overseer.getCurrentBranch(
-					currentView.project.path,
-				);
-				if (isMounted) {
-					setCurrentBranch(branch);
-				}
-			} catch {
-				if (isMounted) {
-					setCurrentBranch(null);
-				}
-			}
+		} catch {
+			setConfigError("Unexpected error while loading config.");
 		}
-
-		void fetchBranch();
-
-		return () => {
-			isMounted = false;
-		};
-	}, [selectedView, currentView]);
+	}
 
 	async function handleAddProject(): Promise<void> {
 		if (typeof window.overseer?.addWorkspaceProject !== "function") {
@@ -87,7 +48,12 @@ export function App({ title }: AppProps) {
 		try {
 			const result = await window.overseer.addWorkspaceProject();
 			if (result.ok) {
-				loadProjects(result.projects);
+				loadConfig(
+					result.projects.map((p) => ({
+						path: p.path,
+						name: p.name,
+					})),
+				);
 			}
 		} catch {
 			console.error("Unable to add project right now.");
@@ -99,10 +65,17 @@ export function App({ title }: AppProps) {
 			title)
 		: title;
 
-	const viewTitle =
-		selectedView === "diff" && currentBranch
-			? `${baseTitle} — ${currentBranch}`
-			: baseTitle;
+	const viewTitle = baseTitle;
+
+	const hasProjects = Object.keys(projects).length > 0;
+
+	if (!hasProjects) {
+		return (
+			<main className="flex h-screen overflow-hidden bg-surface-muted text-text">
+				<EmptyState error={configError} onLoadConfig={handleLoadConfig} />
+			</main>
+		);
+	}
 
 	return (
 		<main className="flex h-screen overflow-hidden bg-surface-muted text-text">

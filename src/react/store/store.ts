@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import type { AppActions, AppState } from "./types";
+import type { ConfigProject } from "../../shared/contracts";
+import type { AppActions, AppState, ProjectView } from "./types";
 
 type AppStore = AppState & AppActions;
 
@@ -45,6 +46,57 @@ export const useAppStore = create<AppStore>((set, get) => ({
 		}
 
 		set({ projects: newProjects });
+	},
+
+	loadConfig: (projects: ConfigProject[]) => {
+		const newProjects: Record<string, AppState["projects"][string]> = {};
+
+		for (const project of projects) {
+			const views: ProjectView[] = [];
+
+			if (project.explorer?.enabled !== false) {
+				views.push({ id: "explorer", label: "Explorer", type: "explorer" });
+			}
+
+			if (project.diff?.enabled !== false) {
+				views.push({ id: "diff", label: "Diff", type: "diff" });
+			}
+
+			if (project.terminals) {
+				for (const terminal of project.terminals) {
+					const terminalId = `terminal-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+					views.push({
+						id: terminalId,
+						label: terminal.name,
+						type: "terminal",
+					});
+				}
+			}
+
+			newProjects[project.path] = {
+				path: project.path,
+				name: project.name,
+				expanded: !project.collapsed,
+				views,
+				viewStates: {
+					explorer: {
+						expandedFolders: [],
+						selectedFile: null,
+					},
+					diff: {
+						leftFile: "",
+						rightFile: "",
+					},
+					terminals: {},
+				},
+			};
+		}
+
+		set({
+			projects: newProjects,
+			selectedProjectPath: null,
+			selectedView: null,
+		});
 	},
 
 	toggleProject: (projectPath) => {

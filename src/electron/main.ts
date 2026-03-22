@@ -1,5 +1,6 @@
 import path from "node:path";
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import { ConfigLoaderError, loadAndValidateConfig } from "./config-loader";
 import { IPC_CHANNELS } from "./contracts";
 import { GitError, getCurrentBranch, isGitRepository } from "./git";
 import { getDiff } from "./git-diff";
@@ -86,6 +87,36 @@ ipcMain.handle(IPC_CHANNELS.addWorkspaceProject, async () => {
 			ok: false,
 			code: "persist-failed",
 			error: "Unexpected error while adding project.",
+		};
+	}
+});
+
+ipcMain.handle(IPC_CHANNELS.loadConfig, async () => {
+	const dialogOwner =
+		BrowserWindow.getFocusedWindow() ??
+		BrowserWindow.getAllWindows()[0] ??
+		null;
+
+	const { canceled, filePaths } = await dialog.showOpenDialog(dialogOwner, {
+		properties: ["openFile"],
+		title: "Load config file",
+		filters: [{ name: "JSON", extensions: ["json"] }],
+	});
+
+	if (canceled || filePaths.length === 0) {
+		return { ok: false, error: "Cancelled" };
+	}
+
+	try {
+		const config = await loadAndValidateConfig(filePaths[0]);
+		return { ok: true, config };
+	} catch (error) {
+		if (error instanceof ConfigLoaderError) {
+			return { ok: false, error: error.message };
+		}
+		return {
+			ok: false,
+			error: error instanceof Error ? error.message : "Unknown error",
 		};
 	}
 });

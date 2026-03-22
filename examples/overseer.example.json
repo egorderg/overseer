@@ -1,0 +1,20 @@
+{
+  "$schema": "../schemas/config.schema.json",
+  "projects": [
+    {
+      "path": "/home/egor/Development/mogul",
+      "name": "mogul-old",
+      "explorer": { "enabled": true },
+      "diff": { "enabled": false },
+      "terminals": [{ "name": "Build" }, { "name": "Dev Server" }],
+      "collapsed": true
+    },
+    {
+      "path": "/home/egor/Development/overseer",
+      "name": "overseer",
+      "explorer": { "enabled": true },
+      "diff": { "enabled": true },
+      "collapsed": false
+    }
+  ]
+}

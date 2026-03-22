@@ -8,6 +8,8 @@ export const useProject = (projectPath: string): ProjectState | undefined =>
 
 export const useLoadProjects = () => useAppStore((state) => state.loadProjects);
 
+export const useLoadConfig = () => useAppStore((state) => state.loadConfig);
+
 export const useToggleProject = () =>
 	useAppStore((state) => state.toggleProject);
 

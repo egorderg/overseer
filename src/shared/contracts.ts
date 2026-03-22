@@ -9,6 +9,23 @@ export interface WorkspaceProject {
 	path: string;
 }
 
+export interface ConfigProject {
+	path: string;
+	name: string;
+	explorer?: { enabled?: boolean };
+	diff?: { enabled?: boolean };
+	terminals?: { name: string }[];
+	collapsed?: boolean;
+}
+
+export interface ConfigFile {
+	projects: ConfigProject[];
+}
+
+export type LoadConfigResult =
+	| { ok: true; config: ConfigFile }
+	| { ok: false; error: string };
+
 export type AddWorkspaceProjectResult =
 	| {
 			ok: true;
@@ -60,6 +77,7 @@ export interface WindowApi {
 	getAppInfo: () => Promise<AppInfo>;
 	getWorkspaceProjects: () => Promise<WorkspaceProject[]>;
 	addWorkspaceProject: () => Promise<AddWorkspaceProjectResult>;
+	loadConfig: () => Promise<LoadConfigResult>;
 	getDiff: (projectPath: string) => Promise<GetDiffResult>;
 	getCurrentBranch: (projectPath: string) => Promise<string | null>;
 }
