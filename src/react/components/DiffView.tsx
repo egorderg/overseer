@@ -18,26 +18,32 @@ function DiffLineRow({ line }: { line: DiffLine }) {
 
 	return (
 		<div className="flex font-mono text-xs">
-			<div
-				className={`${isAdd ? "bg-green-500/5" : ""} flex w-1/2 overflow-hidden border-r border-border`}
-			>
-				<div className="w-12 shrink-0 border-r border-border px-2 py-0.5 text-right text-text-subtle">
+			<div className={`${isAdd ? "bg-green-500/5" : ""} flex`}>
+				<div className="w-12 shrink-0 border-r border-border bg-surface-muted px-2 py-0.5 text-right text-text-subtle">
 					{line.oldNum ?? ""}
 				</div>
 				<pre
-					className={`flex-1 px-3 py-0.5 whitespace-pre ${isDelete ? "bg-red-500/10 text-red-600 dark:text-red-400" : "text-text-muted"}`}
+					className={`px-3 py-0.5 whitespace-pre ${isDelete ? "bg-red-500/10 text-red-600 dark:text-red-400" : "text-text-muted"}`}
 				>
-					{isDelete ? line.text : ""}
+					{isDelete || !isAdd ? line.text : ""}
 				</pre>
 			</div>
-			<div
-				className={`${isDelete ? "bg-red-500/5" : ""} flex w-1/2 overflow-hidden`}
-			>
-				<div className="w-12 shrink-0 border-r border-border px-2 py-0.5 text-right text-text-subtle">
+		</div>
+	);
+}
+
+function DiffLineRowRight({ line }: { line: DiffLine }) {
+	const isDelete = line.type === "delete";
+	const isAdd = line.type === "add";
+
+	return (
+		<div className="flex font-mono text-xs">
+			<div className={`${isDelete ? "bg-red-500/5" : ""} flex`}>
+				<div className="w-12 shrink-0 border-r border-border bg-surface-muted px-2 py-0.5 text-right text-text-subtle">
 					{line.newNum ?? ""}
 				</div>
 				<pre
-					className={`flex-1 px-3 py-0.5 whitespace-pre ${isAdd ? "bg-green-500/10 text-green-600 dark:text-green-400" : "text-text-muted"}`}
+					className={`px-3 py-0.5 whitespace-pre ${isAdd ? "bg-green-500/10 text-green-600 dark:text-green-400" : "text-text-muted"}`}
 				>
 					{isAdd ? line.text : isDelete ? "" : line.text}
 				</pre>
@@ -99,9 +105,9 @@ function DiffFileBlock({
 			{isExpanded && (
 				<>
 					<div className="flex border-b border-border bg-surface text-xs text-text-subtle">
-						<div className="w-1/2 border-r border-border">
+						<div className="w-1/2 border-r-2 border-border">
 							<div className="flex">
-								<div className="w-12 shrink-0 border-r border-border px-2 py-1 text-right">
+								<div className="w-12 shrink-0 border-r border-border bg-surface-muted px-2 py-1 text-right">
 									<span className="opacity-50">#</span>
 								</div>
 								<div className="flex-1 px-3 py-1 font-medium">HEAD</div>
@@ -109,19 +115,28 @@ function DiffFileBlock({
 						</div>
 						<div className="w-1/2">
 							<div className="flex">
-								<div className="w-12 shrink-0 border-r border-border px-2 py-1 text-right">
+								<div className="w-12 shrink-0 border-r border-border bg-surface-muted px-2 py-1 text-right">
 									<span className="opacity-50">#</span>
 								</div>
 								<div className="flex-1 px-3 py-1 font-medium">WORKING</div>
 							</div>
 						</div>
 					</div>
-					<div className="flex flex-col">
-						{file.hunks.flatMap((hunk) =>
-							hunk.lines.map((line, idx) => (
-								<DiffLineRow key={idx} line={line} />
-							)),
-						)}
+					<div className="flex">
+						<div className="w-1/2 flex flex-col overflow-x-auto border-r-2 border-border">
+							{file.hunks.flatMap((hunk) =>
+								hunk.lines.map((line, idx) => (
+									<DiffLineRow key={idx} line={line} />
+								)),
+							)}
+						</div>
+						<div className="w-1/2 flex flex-col overflow-x-auto">
+							{file.hunks.flatMap((hunk) =>
+								hunk.lines.map((line, idx) => (
+									<DiffLineRowRight key={idx} line={line} />
+								)),
+							)}
+						</div>
 					</div>
 				</>
 			)}
