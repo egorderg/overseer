@@ -1,20 +1,23 @@
 {
-  "$schema": "../schemas/config.schema.json",
-  "projects": [
-    {
-      "path": "/home/egor/Development/mogul",
-      "name": "mogul-old",
-      "explorer": { "enabled": true },
-      "diff": { "enabled": false },
-      "terminals": [{ "name": "Build" }, { "name": "Dev Server" }],
-      "collapsed": true
-    },
-    {
-      "path": "/home/egor/Development/overseer",
-      "name": "overseer",
-      "explorer": { "enabled": true },
-      "diff": { "enabled": true },
-      "collapsed": false
-    }
-  ]
+	"$schema": "../schemas/config.schema.json",
+	"projects": [
+		{
+			"path": "/home/egor/Development/mogul",
+			"name": "mogul-old",
+			"explorers": [{ "name": "App", "path": "src" }],
+			"diff": { "enabled": false },
+			"terminals": [{ "name": "Build" }, { "name": "Dev Server" }],
+			"collapsed": true
+		},
+		{
+			"path": "/home/egor/Development/overseer",
+			"name": "overseer",
+			"explorers": [
+				{ "name": "Source", "path": "src" },
+				{ "name": "Scripts", "path": "scripts" }
+			],
+			"diff": { "enabled": true },
+			"collapsed": false
+		}
+	]
 }

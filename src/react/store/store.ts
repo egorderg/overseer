@@ -18,9 +18,26 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
 		for (const project of projects) {
 			const views: ProjectView[] = [];
+			const explorerViewStates: Record<
+				string,
+				{ expandedFolders: string[]; selectedFile: string | null }
+			> = {};
 
-			if (project.explorer?.enabled !== false) {
-				views.push({ id: "explorer", label: "Explorer", type: "explorer" });
+			if (project.explorers) {
+				for (const explorer of project.explorers) {
+					const explorerId = `explorer-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+					views.push({
+						id: explorerId,
+						label: explorer.name,
+						type: "explorer",
+						path: explorer.path,
+						ignore: explorer.ignore ?? [],
+					});
+					explorerViewStates[explorerId] = {
+						expandedFolders: [],
+						selectedFile: null,
+					};
+				}
 			}
 
 			if (project.diff?.enabled !== false) {
@@ -44,10 +61,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 				expanded: !project.collapsed,
 				views,
 				viewStates: {
-					explorer: {
-						expandedFolders: [],
-						selectedFile: null,
-					},
+					explorers: explorerViewStates,
 					diff: {
 						leftFile: "",
 						rightFile: "",
@@ -84,6 +98,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
 		const state = get();
 		const project = state.projects[projectPath];
 		if (!project) return;
+
+		const viewExists = project.views.some((view) => view.id === viewId);
+		if (!viewExists) return;
 
 		set({
 			selectedProjectPath: projectPath,
@@ -127,18 +144,22 @@ export const useAppStore = create<AppStore>((set, get) => ({
 		const project = state.projects[projectPath];
 		if (!project) return;
 
-		const viewState =
-			project.viewStates[viewId as keyof typeof project.viewStates];
-		if (!viewState) return;
-
 		let updatedViewStates;
 
-		if (viewId === "explorer") {
+		if (viewId.startsWith("explorer-")) {
+			const currentExplorerState = project.viewStates.explorers[viewId];
+			if (!currentExplorerState) {
+				return;
+			}
+
 			updatedViewStates = {
 				...project.viewStates,
-				explorer: {
-					...project.viewStates.explorer,
-					...stateUpdate,
+				explorers: {
+					...project.viewStates.explorers,
+					[viewId]: {
+						...currentExplorerState,
+						...stateUpdate,
+					},
 				},
 			};
 		} else if (viewId === "diff") {

@@ -29,9 +29,12 @@
 					"description": "Display name for the project",
 					"examples": ["my-app"]
 				},
-				"explorer": {
-					"$ref": "#/$defs/viewConfig",
-					"description": "Explorer view configuration"
+				"explorers": {
+					"type": "array",
+					"description": "Explorer views for this project",
+					"items": {
+						"$ref": "#/$defs/explorer"
+					}
 				},
 				"diff": {
 					"$ref": "#/$defs/viewConfig",
@@ -71,6 +74,30 @@
 					"type": "string",
 					"description": "Display name for the terminal tab",
 					"examples": ["Build", "Test", "Server"]
+				}
+			},
+			"additionalProperties": false
+		},
+		"explorer": {
+			"type": "object",
+			"required": ["name", "path"],
+			"properties": {
+				"name": {
+					"type": "string",
+					"description": "Display name for the explorer tab",
+					"examples": ["Frontend", "Backend"]
+				},
+				"path": {
+					"type": "string",
+					"description": "Path relative to project.path",
+					"examples": ["src", "packages/app/src"]
+				},
+				"ignore": {
+					"type": "array",
+					"description": "Folder names to ignore recursively for this explorer",
+					"items": {
+						"type": "string"
+					}
 				}
 			},
 			"additionalProperties": false

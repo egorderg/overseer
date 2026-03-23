@@ -1,5 +1,6 @@
 import { constants as fsConstants } from "node:fs";
 import fs from "node:fs/promises";
+import path from "node:path";
 import type { ConfigFile, ConfigProject } from "../shared/contracts";
 
 export class ConfigLoaderError extends Error {
@@ -57,6 +58,49 @@ function validateProject(project: ConfigProject, index: number): void {
 		throw new ConfigLoaderError(
 			`Project at index ${index} missing required field 'name'`,
 		);
+	}
+
+	if (project.explorers !== undefined) {
+		if (!Array.isArray(project.explorers)) {
+			throw new ConfigLoaderError(
+				`Project '${project.name}' field 'explorers' must be an array`,
+			);
+		}
+
+		for (let i = 0; i < project.explorers.length; i++) {
+			const explorer = project.explorers[i];
+
+			if (typeof explorer.name !== "string" || explorer.name.trim() === "") {
+				throw new ConfigLoaderError(
+					`Project '${project.name}' explorer at index ${i} missing required field 'name'`,
+				);
+			}
+
+			if (typeof explorer.path !== "string" || explorer.path.trim() === "") {
+				throw new ConfigLoaderError(
+					`Project '${project.name}' explorer '${explorer.name}' missing required field 'path'`,
+				);
+			}
+
+			if (path.isAbsolute(explorer.path)) {
+				throw new ConfigLoaderError(
+					`Project '${project.name}' explorer '${explorer.name}' path must be relative`,
+				);
+			}
+
+			if (explorer.ignore !== undefined) {
+				if (
+					!Array.isArray(explorer.ignore) ||
+					explorer.ignore.some(
+						(entry) => typeof entry !== "string" || entry.trim() === "",
+					)
+				) {
+					throw new ConfigLoaderError(
+						`Project '${project.name}' explorer '${explorer.name}' field 'ignore' must be an array of non-empty strings`,
+					);
+				}
+			}
+		}
 	}
 }
 

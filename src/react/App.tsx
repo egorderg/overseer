@@ -45,26 +45,32 @@ export function App({ title }: AppProps) {
 		: title;
 
 	const viewTitle = baseTitle;
+	const viewContext = currentView ? currentView.project.name : "Workspace";
 
 	const hasProjects = Object.keys(projects).length > 0;
 
 	if (!hasProjects) {
 		return (
-			<main className="flex h-screen overflow-hidden bg-surface-muted text-text">
+			<main className="flex h-screen overflow-hidden bg-surface text-text">
 				<EmptyState error={configError} onLoadConfig={handleLoadConfig} />
 			</main>
 		);
 	}
 
 	return (
-		<main className="flex h-screen overflow-hidden bg-surface-muted text-text">
+		<main className="flex h-screen overflow-hidden bg-surface text-text">
 			<ProjectsSidebar projects={Object.values(projects)} />
 
 			<section className="flex min-h-0 flex-1 flex-col overflow-hidden">
 				<div className="border-b border-border px-8 py-3">
-					<span className="text-xs font-medium uppercase tracking-[0.15em] text-text-subtle">
-						{viewTitle}
-					</span>
+					<div className="min-w-0">
+						<p className="text-[11px] font-medium uppercase tracking-[0.18em] text-text-subtle">
+							{viewContext}
+						</p>
+						<h1 className="mt-1 truncate text-sm font-semibold tracking-tight text-text">
+							{viewTitle}
+						</h1>
+					</div>
 				</div>
 				<MainContent />
 			</section>

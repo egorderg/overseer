@@ -1,7 +1,13 @@
 import type { ConfigProject } from "../../shared/contracts";
 
 export type ProjectView =
-	| { id: "explorer"; label: "Explorer"; type: "explorer" }
+	| {
+			id: string;
+			label: string;
+			type: "explorer";
+			path: string;
+			ignore: string[];
+	  }
 	| { id: "diff"; label: "Diff"; type: "diff" }
 	| { id: string; label: string; type: "terminal" };
 
@@ -31,7 +37,7 @@ export interface ProjectState {
 	expanded: boolean;
 	views: ProjectView[];
 	viewStates: {
-		explorer: ExplorerViewState;
+		explorers: Record<string, ExplorerViewState>;
 		diff: DiffViewState;
 		terminals: Record<string, TerminalViewState>;
 	};

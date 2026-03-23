@@ -60,15 +60,20 @@
    Base Styles
    ============================================================================= */
 
+html,
+body,
+#root {
+	width: 100%;
+	height: 100%;
+}
+
+html,
+body {
+	background: var(--color-surface);
+}
+
 body {
 	margin: 0;
 	font-family: var(--font-sans);
-	background: linear-gradient(180deg, #f9fafb 0%, #eef2ff 100%);
 	color: var(--color-text);
-}
-
-@media (prefers-color-scheme: dark) {
-	body {
-		background: linear-gradient(180deg, #0f172a 0%, #1a1033 100%);
-	}
 }

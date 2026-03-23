@@ -7,10 +7,16 @@ export interface AppInfo {
 export interface ConfigProject {
 	path: string;
 	name: string;
-	explorer?: { enabled?: boolean };
+	explorers?: ConfigExplorer[];
 	diff?: { enabled?: boolean };
 	terminals?: { name: string }[];
 	collapsed?: boolean;
+}
+
+export interface ConfigExplorer {
+	name: string;
+	path: string;
+	ignore?: string[];
 }
 
 export interface ConfigFile {
@@ -21,27 +27,14 @@ export type LoadConfigResult =
 	| { ok: true; config: ConfigFile }
 	| { ok: false; error: string };
 
-export interface DiffLine {
-	type: "context" | "add" | "delete";
-	oldNum: number | null;
-	newNum: number | null;
-	text: string;
-}
-
-export interface Hunk {
-	oldStart: number;
-	oldLines: number;
-	newStart: number;
-	newLines: number;
-	lines: DiffLine[];
-}
-
 export interface DiffFile {
 	path: string;
-	status: "modified" | "new" | "deleted";
+	status: "modified" | "added" | "deleted";
+	original: string;
+	modified: string;
 	additions: number;
 	deletions: number;
-	hunks: Hunk[];
+	changedLines: number;
 }
 
 export interface DiffResult {
@@ -56,9 +49,54 @@ export type GetDiffResult =
 			error: string;
 	  };
 
+export type OpenInVsCodeResult =
+	| { ok: true }
+	| {
+			ok: false;
+			error: string;
+	  };
+
+export interface ExplorerFile {
+	path: string;
+	name: string;
+	directory: string;
+}
+
+export type ListExplorerFilesResult =
+	| { ok: true; files: ExplorerFile[] }
+	| {
+			ok: false;
+			code: "invalid-path" | "not-found" | "unknown";
+			error: string;
+	  };
+
+export type ReadExplorerFileResult =
+	| { ok: true; content: string }
+	| {
+			ok: false;
+			code:
+				| "invalid-path"
+				| "not-found"
+				| "not-a-file"
+				| "too-large"
+				| "unknown";
+			error: string;
+	  };
+
 export interface WindowApi {
 	getAppInfo: () => Promise<AppInfo>;
 	loadConfig: () => Promise<LoadConfigResult>;
 	getDiff: (projectPath: string) => Promise<GetDiffResult>;
 	getCurrentBranch: (projectPath: string) => Promise<string | null>;
+	openInVsCode: (projectPath: string) => Promise<OpenInVsCodeResult>;
+	listExplorerFiles: (
+		projectPath: string,
+		explorerPath: string,
+		ignore: string[],
+	) => Promise<ListExplorerFilesResult>;
+	readExplorerFile: (
+		projectPath: string,
+		explorerPath: string,
+		filePath: string,
+	) => Promise<ReadExplorerFileResult>;
 }

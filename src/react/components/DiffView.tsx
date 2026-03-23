@@ -1,147 +1,75 @@
+import { DiffEditor } from "@monaco-editor/react";
 import { useEffect, useState } from "react";
-import type { DiffFile, DiffLine, DiffResult } from "../../shared/contracts";
-
-const EXPANDED_LINE_THRESHOLD = 500;
+import type { DiffResult } from "../../shared/contracts";
 
 type ViewState =
 	| { status: "loading" }
 	| { status: "error"; code: string; message: string }
 	| { status: "success"; diff: DiffResult };
 
-function getFileLineCount(file: DiffFile): number {
-	return file.hunks.reduce((sum, hunk) => sum + hunk.lines.length, 0);
-}
-
-function DiffLineRow({ line }: { line: DiffLine }) {
-	const isDelete = line.type === "delete";
-	const isAdd = line.type === "add";
-
-	return (
-		<div className="flex font-mono text-xs">
-			<div className={`${isAdd ? "bg-green-500/5" : ""} flex`}>
-				<div className="w-12 shrink-0 border-r border-border bg-surface-muted px-2 py-0.5 text-right text-text-subtle">
-					{line.oldNum ?? ""}
-				</div>
-				<pre
-					className={`px-3 py-0.5 whitespace-pre ${isDelete ? "bg-red-500/10 text-red-600 dark:text-red-400" : "text-text-muted"}`}
-				>
-					{isDelete || !isAdd ? line.text : ""}
-				</pre>
-			</div>
-		</div>
-	);
-}
-
-function DiffLineRowRight({ line }: { line: DiffLine }) {
-	const isDelete = line.type === "delete";
-	const isAdd = line.type === "add";
-
-	return (
-		<div className="flex font-mono text-xs">
-			<div className={`${isDelete ? "bg-red-500/5" : ""} flex`}>
-				<div className="w-12 shrink-0 border-r border-border bg-surface-muted px-2 py-0.5 text-right text-text-subtle">
-					{line.newNum ?? ""}
-				</div>
-				<pre
-					className={`px-3 py-0.5 whitespace-pre ${isAdd ? "bg-green-500/10 text-green-600 dark:text-green-400" : "text-text-muted"}`}
-				>
-					{isAdd ? line.text : isDelete ? "" : line.text}
-				</pre>
-			</div>
-		</div>
-	);
-}
-
-function DiffFileBlock({
-	file,
-	isExpanded,
-	onToggle,
-}: {
-	file: DiffFile;
-	isExpanded: boolean;
-	onToggle: () => void;
-}) {
-	const statusLabel = () => {
-		switch (file.status) {
-			case "new":
-				return "NEW";
-			case "deleted":
-				return "DELETED";
-			default:
-				return `+${file.additions}, -${file.deletions}`;
-		}
+function getLanguage(path: string): string | undefined {
+	const ext = path.split(".").pop();
+	const languageMap: Record<string, string> = {
+		ts: "typescript",
+		tsx: "typescript",
+		js: "javascript",
+		jsx: "javascript",
+		py: "python",
+		rb: "ruby",
+		go: "go",
+		rs: "rust",
+		java: "java",
+		c: "c",
+		cpp: "cpp",
+		h: "c",
+		hpp: "cpp",
+		cs: "csharp",
+		php: "php",
+		swift: "swift",
+		kt: "kotlin",
+		json: "json",
+		yaml: "yaml",
+		yml: "yaml",
+		xml: "xml",
+		html: "html",
+		css: "css",
+		scss: "scss",
+		sass: "sass",
+		less: "less",
+		md: "markdown",
+		mdx: "markdown",
+		sql: "sql",
+		sh: "shell",
+		bash: "shell",
+		zsh: "shell",
+		fish: "shell",
+		ps1: "powershell",
+		dockerfile: "dockerfile",
+		makefile: "makefile",
+		toml: "toml",
+		ini: "ini",
+		cfg: "ini",
+		conf: "ini",
+		log: "plaintext",
+		txt: "plaintext",
 	};
+	return ext ? languageMap[ext.toLowerCase()] : undefined;
+}
 
-	const statusColor = () => {
-		switch (file.status) {
-			case "new":
-				return "text-green-600 dark:text-green-400";
-			case "deleted":
-				return "text-red-600 dark:text-red-400";
-			default:
-				return "text-text-muted";
-		}
-	};
+function getFileName(filePath: string): string {
+	const segments = filePath.split(/[\\/]/);
+	return segments[segments.length - 1] ?? filePath;
+}
 
-	return (
-		<div className="border-b border-border last:border-b-0">
-			<button
-				type="button"
-				onClick={onToggle}
-				className="flex w-full items-center justify-between border-b border-border bg-surface-muted px-4 py-2 text-left hover:bg-surface"
-			>
-				<div className="flex items-center gap-2">
-					<span className="text-xs text-text-subtle">
-						{isExpanded ? "▼" : "▶"}
-					</span>
-					<span className="truncate font-mono text-sm text-text">
-						{file.path}
-					</span>
-				</div>
-				<span className={`shrink-0 font-mono text-xs ${statusColor()}`}>
-					{statusLabel()}
-				</span>
-			</button>
-			{isExpanded && (
-				<>
-					<div className="flex border-b border-border bg-surface text-xs text-text-subtle">
-						<div className="w-1/2 border-r-2 border-border">
-							<div className="flex">
-								<div className="w-12 shrink-0 border-r border-border bg-surface-muted px-2 py-1 text-right">
-									<span className="opacity-50">#</span>
-								</div>
-								<div className="flex-1 px-3 py-1 font-medium">HEAD</div>
-							</div>
-						</div>
-						<div className="w-1/2">
-							<div className="flex">
-								<div className="w-12 shrink-0 border-r border-border bg-surface-muted px-2 py-1 text-right">
-									<span className="opacity-50">#</span>
-								</div>
-								<div className="flex-1 px-3 py-1 font-medium">WORKING</div>
-							</div>
-						</div>
-					</div>
-					<div className="flex">
-						<div className="w-1/2 flex flex-col overflow-x-auto border-r-2 border-border">
-							{file.hunks.flatMap((hunk) =>
-								hunk.lines.map((line, idx) => (
-									<DiffLineRow key={idx} line={line} />
-								)),
-							)}
-						</div>
-						<div className="w-1/2 flex flex-col overflow-x-auto">
-							{file.hunks.flatMap((hunk) =>
-								hunk.lines.map((line, idx) => (
-									<DiffLineRowRight key={idx} line={line} />
-								)),
-							)}
-						</div>
-					</div>
-				</>
-			)}
-		</div>
-	);
+function getDirectoryPath(filePath: string): string {
+	const normalizedPath = filePath.replace(/\\/g, "/");
+	const lastSeparatorIndex = normalizedPath.lastIndexOf("/");
+
+	if (lastSeparatorIndex === -1) {
+		return ".";
+	}
+
+	return normalizedPath.slice(0, lastSeparatorIndex);
 }
 
 function LoadingState() {
@@ -178,21 +106,17 @@ function EmptyState() {
 
 export function DiffView({ projectPath }: { projectPath: string }) {
 	const [state, setState] = useState<ViewState>({ status: "loading" });
-	const [expandedFiles, setExpandedFiles] = useState<Set<string>>(
-		() => new Set(),
+	const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
+	const [isDark, setIsDark] = useState(
+		() => window.matchMedia("(prefers-color-scheme: dark)").matches,
 	);
 
-	const toggleFile = (path: string) => {
-		setExpandedFiles((prev) => {
-			const next = new Set(prev);
-			if (next.has(path)) {
-				next.delete(path);
-			} else {
-				next.add(path);
-			}
-			return next;
-		});
-	};
+	useEffect(() => {
+		const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+		const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
+		mediaQuery.addEventListener("change", handler);
+		return () => mediaQuery.removeEventListener("change", handler);
+	}, []);
 
 	useEffect(() => {
 		let isMounted = true;
@@ -214,13 +138,6 @@ export function DiffView({ projectPath }: { projectPath: string }) {
 
 				if (result.ok) {
 					setState({ status: "success", diff: result.diff });
-					setExpandedFiles(
-						new Set(
-							result.diff.files
-								.filter((f) => getFileLineCount(f) <= EXPANDED_LINE_THRESHOLD)
-								.map((f) => f.path),
-						),
-					);
 				} else {
 					setState({
 						status: "error",
@@ -245,6 +162,21 @@ export function DiffView({ projectPath }: { projectPath: string }) {
 		};
 	}, [projectPath]);
 
+	useEffect(() => {
+		if (state.status !== "success") {
+			setSelectedFilePath(null);
+			return;
+		}
+
+		const hasSelection = state.diff.files.some(
+			(file) => file.path === selectedFilePath,
+		);
+
+		if (!hasSelection) {
+			setSelectedFilePath(state.diff.files[0]?.path ?? null);
+		}
+	}, [state, selectedFilePath]);
+
 	if (state.status === "loading") {
 		return <LoadingState />;
 	}
@@ -257,16 +189,107 @@ export function DiffView({ projectPath }: { projectPath: string }) {
 		return <EmptyState />;
 	}
 
+	const selectedFile =
+		state.diff.files.find((file) => file.path === selectedFilePath) ??
+		state.diff.files[0];
+	const language = getLanguage(selectedFile.path);
+
 	return (
-		<div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-			{state.diff.files.map((file, idx) => (
-				<DiffFileBlock
-					key={`${file.path}-${idx}`}
-					file={file}
-					isExpanded={expandedFiles.has(file.path)}
-					onToggle={() => toggleFile(file.path)}
-				/>
-			))}
+		<div className="flex min-h-0 flex-1 overflow-hidden">
+			<aside className="w-64 shrink-0 border-r border-border bg-surface">
+				<ul className="h-full overflow-y-auto">
+					{state.diff.files.map((file) => {
+						const directoryPath = getDirectoryPath(file.path);
+						const statusLabel =
+							file.status === "added"
+								? "A"
+								: file.status === "deleted"
+									? "D"
+									: "M";
+						const statusClassName =
+							file.status === "added"
+								? "bg-green-500/10 text-green-600 dark:text-green-400"
+								: file.status === "deleted"
+									? "bg-red-500/10 text-red-600 dark:text-red-400"
+									: "bg-amber-500/10 text-amber-700 dark:text-amber-400";
+						const isSelected = selectedFile.path === file.path;
+
+						return (
+							<li key={file.path}>
+								<button
+									type="button"
+									className={`flex w-full items-start gap-2 px-3 py-2 text-left transition ${
+										isSelected ? "bg-surface-muted" : "hover:bg-surface-muted"
+									}`}
+									onClick={() => setSelectedFilePath(file.path)}
+								>
+									<span
+										className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${statusClassName}`}
+									>
+										{statusLabel}
+									</span>
+									<div className="min-w-0 flex-1">
+										<span className="block truncate font-mono text-xs text-text">
+											{getFileName(file.path)}
+										</span>
+										<span className="mt-0.5 block truncate font-mono text-[10px] text-text-subtle">
+											{directoryPath}
+										</span>
+									</div>
+									<div className="mt-0.5 flex shrink-0 items-center gap-2 font-mono text-[10px]">
+										<span className="text-green-600 dark:text-green-400">
+											+{file.additions}
+										</span>
+										<span className="text-red-600 dark:text-red-400">
+											-{file.deletions}
+										</span>
+									</div>
+								</button>
+							</li>
+						);
+					})}
+				</ul>
+			</aside>
+
+			<div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+				<div className="min-h-0 flex-1 border-b border-border">
+					<DiffEditor
+						original={selectedFile.original}
+						modified={selectedFile.modified}
+						language={language}
+						theme={isDark ? "vs-dark" : "vs"}
+						beforeMount={(monaco) => {
+							monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
+								{
+									noSemanticValidation: false,
+									noSyntaxValidation: false,
+									diagnosticCodesToIgnore: [7027],
+								},
+							);
+						}}
+						options={{
+							readOnly: true,
+							renderSideBySide: true,
+							minimap: { enabled: false },
+							scrollBeyondLastLine: false,
+							lineNumbers: "on",
+							stickyScroll: {
+								enabled: false,
+							},
+							folding: false,
+							wordWrap: "off",
+							diffWordWrap: "off",
+							automaticLayout: true,
+							ignoreTrimWhitespace: false,
+							renderWhitespace: "selection",
+							scrollbar: {
+								vertical: "auto",
+								horizontal: "auto",
+							},
+						}}
+					/>
+				</div>
+			</div>
 		</div>
 	);
 }
