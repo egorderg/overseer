@@ -1,8 +1,6 @@
 - hot reload for config?
+- example config in README
 - cleanup getLanguages
-
-- validate Electron packaging on macOS and Windows
-- bundle on release tag
 
 ## Workflow
 
