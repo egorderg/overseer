@@ -9,8 +9,25 @@ export interface ConfigProject {
 	name: string;
 	explorers?: ConfigExplorer[];
 	diff?: { enabled?: boolean };
-	terminals?: { name: string }[];
+	terminals?: ConfigTerminal[];
 	collapsed?: boolean;
+}
+
+export interface ConfigTerminalShell {
+	command?: string;
+	args?: string[];
+	env?: Record<string, string>;
+}
+
+export interface ConfigTerminalSettings {
+	shell?: string;
+	shells?: Record<string, ConfigTerminalShell>;
+}
+
+export interface ConfigTerminal {
+	name: string;
+	shell?: string;
+	command?: string;
 }
 
 export interface ConfigExplorer {
@@ -21,6 +38,7 @@ export interface ConfigExplorer {
 
 export interface ConfigFile {
 	projects: ConfigProject[];
+	terminal?: ConfigTerminalSettings;
 }
 
 export type LoadConfigResult =
@@ -83,6 +101,60 @@ export type ReadExplorerFileResult =
 			error: string;
 	  };
 
+export interface CreateTerminalSessionRequest {
+	projectPath: string;
+	terminalId: string;
+	shell?: string;
+	settings?: ConfigTerminalSettings;
+	cols: number;
+	rows: number;
+}
+
+export type CreateTerminalSessionResult =
+	| {
+			ok: true;
+			sessionId: string;
+			shell: string | null;
+			reused: boolean;
+	  }
+	| {
+			ok: false;
+			error: string;
+	  };
+
+export interface TerminalInputRequest {
+	sessionId: string;
+	data: string;
+}
+
+export interface TerminalResizeRequest {
+	sessionId: string;
+	cols: number;
+	rows: number;
+}
+
+export interface TerminalCloseRequest {
+	sessionId: string;
+}
+
+export type TerminalMutationResult =
+	| { ok: true }
+	| {
+			ok: false;
+			error: string;
+	  };
+
+export interface TerminalDataEvent {
+	sessionId: string;
+	data: string;
+}
+
+export interface TerminalExitEvent {
+	sessionId: string;
+	exitCode: number;
+	signal: number;
+}
+
 export interface WindowApi {
 	getAppInfo: () => Promise<AppInfo>;
 	loadConfig: () => Promise<LoadConfigResult>;
@@ -99,4 +171,18 @@ export interface WindowApi {
 		explorerPath: string,
 		filePath: string,
 	) => Promise<ReadExplorerFileResult>;
+	createTerminalSession: (
+		request: CreateTerminalSessionRequest,
+	) => Promise<CreateTerminalSessionResult>;
+	writeToTerminal: (
+		request: TerminalInputRequest,
+	) => Promise<TerminalMutationResult>;
+	resizeTerminal: (
+		request: TerminalResizeRequest,
+	) => Promise<TerminalMutationResult>;
+	closeTerminalSession: (
+		request: TerminalCloseRequest,
+	) => Promise<TerminalMutationResult>;
+	onTerminalData: (listener: (event: TerminalDataEvent) => void) => () => void;
+	onTerminalExit: (listener: (event: TerminalExitEvent) => void) => () => void;
 }

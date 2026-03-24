@@ -6,6 +6,10 @@
 	"type": "object",
 	"required": ["projects"],
 	"properties": {
+		"terminal": {
+			"$ref": "#/$defs/terminalSettings",
+			"description": "Global terminal settings and shell defaults"
+		},
 		"projects": {
 			"type": "array",
 			"description": "List of projects in the workspace",
@@ -74,6 +78,62 @@
 					"type": "string",
 					"description": "Display name for the terminal tab",
 					"examples": ["Build", "Test", "Server"]
+				},
+				"shell": {
+					"type": "string",
+					"minLength": 1,
+					"description": "Optional shell override for this terminal tab"
+				},
+				"command": {
+					"type": "string",
+					"minLength": 1,
+					"description": "Optional command executed once when the terminal session starts"
+				}
+			},
+			"additionalProperties": false
+		},
+		"terminalShellConfig": {
+			"type": "object",
+			"properties": {
+				"command": {
+					"type": "string",
+					"description": "Shell executable to spawn"
+				},
+				"args": {
+					"type": "array",
+					"description": "Optional arguments passed to the shell executable",
+					"items": {
+						"type": "string"
+					}
+				},
+				"env": {
+					"type": "object",
+					"description": "Optional environment variable overrides",
+					"additionalProperties": {
+						"type": "string"
+					}
+				}
+			},
+			"additionalProperties": false
+		},
+		"terminalSettings": {
+			"type": "object",
+			"properties": {
+				"shell": {
+					"type": "string",
+					"minLength": 1,
+					"description": "Default shell for terminals without explicit shell"
+				},
+				"shells": {
+					"type": "object",
+					"description": "Shell command definitions keyed by custom shell names",
+					"propertyNames": {
+						"type": "string",
+						"minLength": 1
+					},
+					"additionalProperties": {
+						"$ref": "#/$defs/terminalShellConfig"
+					}
 				}
 			},
 			"additionalProperties": false

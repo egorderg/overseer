@@ -8,12 +8,17 @@ import { ConfigLoaderError, loadAndValidateConfig } from "./config-loader";
 import { IPC_CHANNELS } from "./contracts";
 import { GitError, getCurrentBranch, isGitRepository } from "./git";
 import { getDiff } from "./git-diff";
+import {
+	normalizeTerminalDimensions,
+	TerminalSessionManager,
+} from "./terminal-session-manager";
 
 const DEV_SERVER_URL =
 	process.env.ELECTRON_RENDERER_URL ?? "http://localhost:5173";
 const isDevelopment = process.env.NODE_ENV !== "production";
 const execFileAsync = promisify(execFile);
 const MAX_EXPLORER_FILE_SIZE_BYTES = 1024 * 1024;
+const terminalSessionManager = new TerminalSessionManager();
 
 function isSubPath(parentPath: string, targetPath: string): boolean {
 	const relative = path.relative(parentPath, targetPath);
@@ -458,6 +463,181 @@ ipcMain.handle(
 	},
 );
 
+ipcMain.handle(
+	IPC_CHANNELS.createTerminalSession,
+	async (
+		event,
+		request: {
+			projectPath?: unknown;
+			terminalId?: unknown;
+			shell?: unknown;
+			settings?: unknown;
+			cols?: unknown;
+			rows?: unknown;
+		},
+	) => {
+		if (typeof request !== "object" || request === null) {
+			return { ok: false, error: "Invalid terminal session request." } as const;
+		}
+
+		const projectPath =
+			typeof request.projectPath === "string" ? request.projectPath : "";
+		const terminalId =
+			typeof request.terminalId === "string" ? request.terminalId : "";
+		if (projectPath.trim() === "" || terminalId.trim() === "") {
+			return {
+				ok: false,
+				error: "Invalid project path or terminal ID.",
+			} as const;
+		}
+
+		let resolvedProjectPath: string;
+		try {
+			resolvedProjectPath = await fs.realpath(projectPath);
+		} catch {
+			return {
+				ok: false,
+				error: `Project path does not exist: ${projectPath}`,
+			} as const;
+		}
+
+		let stats: import("node:fs").Stats;
+		try {
+			stats = await fs.stat(resolvedProjectPath);
+		} catch {
+			return {
+				ok: false,
+				error: `Project path does not exist: ${projectPath}`,
+			} as const;
+		}
+
+		if (!stats.isDirectory()) {
+			return {
+				ok: false,
+				error: `Project path is not a folder: ${projectPath}`,
+			} as const;
+		}
+
+		if (
+			request.shell !== undefined &&
+			(typeof request.shell !== "string" || request.shell.trim() === "")
+		) {
+			return {
+				ok: false,
+				error: "Invalid terminal shell.",
+			} as const;
+		}
+
+		const cols = typeof request.cols === "number" ? request.cols : 80;
+		const rows = typeof request.rows === "number" ? request.rows : 24;
+		const dimensions = normalizeTerminalDimensions(cols, rows);
+
+		try {
+			const created = terminalSessionManager.createSession({
+				projectPath: resolvedProjectPath,
+				terminalId,
+				shell: request.shell,
+				settings:
+					typeof request.settings === "object" && request.settings !== null
+						? (request.settings as {
+								shell?: string;
+								shells?: Record<
+									string,
+									{
+										command?: string;
+										args?: string[];
+										env?: Record<string, string>;
+									}
+								>;
+							})
+						: undefined,
+				cols: dimensions.cols,
+				rows: dimensions.rows,
+				webContents: event.sender,
+			});
+
+			return {
+				ok: true,
+				sessionId: created.sessionId,
+				shell: created.shell,
+				reused: created.reused,
+			} as const;
+		} catch (error) {
+			return {
+				ok: false,
+				error:
+					error instanceof Error ? error.message : "Unknown terminal error.",
+			} as const;
+		}
+	},
+);
+
+ipcMain.handle(
+	IPC_CHANNELS.writeToTerminal,
+	(_event, request: { sessionId?: unknown; data?: unknown }) => {
+		if (
+			typeof request?.sessionId !== "string" ||
+			typeof request?.data !== "string"
+		) {
+			return { ok: false, error: "Invalid terminal write request." } as const;
+		}
+
+		try {
+			terminalSessionManager.write(request.sessionId, request.data);
+			return { ok: true } as const;
+		} catch (error) {
+			return {
+				ok: false,
+				error:
+					error instanceof Error ? error.message : "Unknown terminal error.",
+			} as const;
+		}
+	},
+);
+
+ipcMain.handle(
+	IPC_CHANNELS.resizeTerminal,
+	(
+		_event,
+		request: { sessionId?: unknown; cols?: unknown; rows?: unknown },
+	) => {
+		if (typeof request?.sessionId !== "string") {
+			return { ok: false, error: "Invalid terminal resize request." } as const;
+		}
+
+		const cols = typeof request.cols === "number" ? request.cols : 80;
+		const rows = typeof request.rows === "number" ? request.rows : 24;
+		const dimensions = normalizeTerminalDimensions(cols, rows);
+
+		try {
+			terminalSessionManager.resize(
+				request.sessionId,
+				dimensions.cols,
+				dimensions.rows,
+			);
+			return { ok: true } as const;
+		} catch (error) {
+			return {
+				ok: false,
+				error:
+					error instanceof Error ? error.message : "Unknown terminal error.",
+			} as const;
+		}
+	},
+);
+
+ipcMain.handle(
+	IPC_CHANNELS.closeTerminalSession,
+	(_event, request: { sessionId?: unknown }) => {
+		if (typeof request?.sessionId !== "string") {
+			return { ok: false, error: "Invalid terminal close request." } as const;
+		}
+
+		terminalSessionManager.close(request.sessionId);
+		return { ok: true } as const;
+	},
+);
+
 app.whenReady().then(() => {
 	createWindow();
 
@@ -466,9 +646,17 @@ app.whenReady().then(() => {
 			createWindow();
 		}
 	});
+
+	app.on("web-contents-created", (_event, webContents) => {
+		webContents.once("destroyed", () => {
+			terminalSessionManager.closeForWebContents(webContents.id);
+		});
+	});
 });
 
 app.on("window-all-closed", () => {
+	terminalSessionManager.closeAll();
+
 	if (process.platform !== "darwin") {
 		app.quit();
 	}

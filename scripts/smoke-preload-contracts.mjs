@@ -39,6 +39,18 @@ assert(
 	"preload.js does not contain the app info IPC channel.",
 );
 assert(
+	preloadContent.includes("terminal:create-session"),
+	"preload.js does not contain terminal session channel.",
+);
+assert(
+	preloadContent.includes("createTerminalSession"),
+	"preload.js does not expose createTerminalSession.",
+);
+assert(
+	preloadContent.includes("onTerminalData"),
+	"preload.js does not expose onTerminalData.",
+);
+assert(
 	mainContent.includes("./contracts"),
 	"main.js does not reference the local contracts module.",
 );

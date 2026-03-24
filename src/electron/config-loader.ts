@@ -1,7 +1,11 @@
 import { constants as fsConstants } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { ConfigFile, ConfigProject } from "../shared/contracts";
+import type {
+	ConfigFile,
+	ConfigProject,
+	ConfigTerminalShell,
+} from "../shared/contracts";
 
 export class ConfigLoaderError extends Error {
 	constructor(message: string) {
@@ -37,6 +41,7 @@ export async function loadAndValidateConfig(
 	}
 
 	const config = parsed as ConfigFile;
+	validateTerminalSettings(config);
 
 	for (let i = 0; i < config.projects.length; i++) {
 		const project = config.projects[i];
@@ -99,6 +104,170 @@ function validateProject(project: ConfigProject, index: number): void {
 						`Project '${project.name}' explorer '${explorer.name}' field 'ignore' must be an array of non-empty strings`,
 					);
 				}
+			}
+		}
+	}
+
+	if (project.terminals !== undefined) {
+		if (!Array.isArray(project.terminals)) {
+			throw new ConfigLoaderError(
+				`Project '${project.name}' field 'terminals' must be an array`,
+			);
+		}
+
+		for (let i = 0; i < project.terminals.length; i++) {
+			const terminal = project.terminals[i];
+
+			if (typeof terminal.name !== "string" || terminal.name.trim() === "") {
+				throw new ConfigLoaderError(
+					`Project '${project.name}' terminal at index ${i} missing required field 'name'`,
+				);
+			}
+
+			if (
+				terminal.shell !== undefined &&
+				(typeof terminal.shell !== "string" || terminal.shell.trim() === "")
+			) {
+				throw new ConfigLoaderError(
+					`Project '${project.name}' terminal '${terminal.name}' field 'shell' must be a non-empty string`,
+				);
+			}
+
+			if (
+				terminal.command !== undefined &&
+				(typeof terminal.command !== "string" || terminal.command.trim() === "")
+			) {
+				throw new ConfigLoaderError(
+					`Project '${project.name}' terminal '${terminal.name}' field 'command' must be a non-empty string`,
+				);
+			}
+		}
+	}
+}
+
+function validateTerminalShellConfig(
+	shellName: string,
+	shellConfig: ConfigTerminalShell,
+): void {
+	if (
+		shellConfig.command !== undefined &&
+		(typeof shellConfig.command !== "string" ||
+			shellConfig.command.trim() === "")
+	) {
+		throw new ConfigLoaderError(
+			`Terminal shell '${shellName}' field 'command' must be a non-empty string`,
+		);
+	}
+
+	if (
+		shellConfig.args !== undefined &&
+		(!Array.isArray(shellConfig.args) ||
+			shellConfig.args.some(
+				(entry) => typeof entry !== "string" || entry.trim() === "",
+			))
+	) {
+		throw new ConfigLoaderError(
+			`Terminal shell '${shellName}' field 'args' must be an array of non-empty strings`,
+		);
+	}
+
+	if (shellConfig.env !== undefined) {
+		if (
+			typeof shellConfig.env !== "object" ||
+			shellConfig.env === null ||
+			Array.isArray(shellConfig.env)
+		) {
+			throw new ConfigLoaderError(
+				`Terminal shell '${shellName}' field 'env' must be an object of string values`,
+			);
+		}
+
+		for (const [key, value] of Object.entries(shellConfig.env)) {
+			if (key.trim() === "" || typeof value !== "string") {
+				throw new ConfigLoaderError(
+					`Terminal shell '${shellName}' field 'env' must contain non-empty string keys and string values`,
+				);
+			}
+		}
+	}
+}
+
+function validateTerminalSettings(config: ConfigFile): void {
+	const settings = config.terminal;
+	if (settings === undefined) {
+		return;
+	}
+
+	if (
+		typeof settings !== "object" ||
+		settings === null ||
+		Array.isArray(settings)
+	) {
+		throw new ConfigLoaderError("Top-level field 'terminal' must be an object");
+	}
+
+	if (
+		settings.shell !== undefined &&
+		(typeof settings.shell !== "string" || settings.shell.trim() === "")
+	) {
+		throw new ConfigLoaderError(
+			"Top-level field 'terminal.shell' must be a non-empty string",
+		);
+	}
+
+	if (settings.shells !== undefined) {
+		if (
+			typeof settings.shells !== "object" ||
+			settings.shells === null ||
+			Array.isArray(settings.shells)
+		) {
+			throw new ConfigLoaderError(
+				"Top-level field 'terminal.shells' must be an object",
+			);
+		}
+
+		for (const [shellName, shellConfig] of Object.entries(settings.shells)) {
+			if (shellName.trim() === "") {
+				throw new ConfigLoaderError(
+					"Terminal shell names in 'terminal.shells' must be non-empty strings",
+				);
+			}
+
+			if (
+				typeof shellConfig !== "object" ||
+				shellConfig === null ||
+				Array.isArray(shellConfig)
+			) {
+				throw new ConfigLoaderError(
+					`Terminal shell '${shellName}' configuration must be an object`,
+				);
+			}
+
+			validateTerminalShellConfig(shellName, shellConfig);
+		}
+	}
+
+	const shellNames = new Set(Object.keys(settings.shells ?? {}));
+	if (settings.shell !== undefined && !shellNames.has(settings.shell)) {
+		throw new ConfigLoaderError(
+			`Top-level field 'terminal.shell' references unknown shell '${settings.shell}'. Define it in 'terminal.shells'.`,
+		);
+	}
+
+	for (const project of config.projects) {
+		if (project.terminals === undefined) {
+			continue;
+		}
+
+		for (const terminal of project.terminals) {
+			if (terminal.shell === undefined) {
+				continue;
+			}
+
+			if (!shellNames.has(terminal.shell)) {
+				throw new ConfigLoaderError(
+					`Project '${project.name}' terminal '${terminal.name}' references unknown shell '${terminal.shell}'. Define it in 'terminal.shells'.`,
+				);
 			}
 		}
 	}

@@ -1,4 +1,8 @@
-import type { ConfigProject } from "../../shared/contracts";
+import type {
+	ConfigFile,
+	ConfigProject,
+	ConfigTerminalSettings,
+} from "../../shared/contracts";
 
 export type ProjectView =
 	| {
@@ -9,7 +13,13 @@ export type ProjectView =
 			ignore: string[];
 	  }
 	| { id: "diff"; label: "Diff"; type: "diff" }
-	| { id: string; label: string; type: "terminal" };
+	| {
+			id: string;
+			label: string;
+			type: "terminal";
+			shell?: string;
+			command?: string;
+	  };
 
 export interface ExplorerViewState {
 	expandedFolders: string[];
@@ -24,6 +34,12 @@ export interface DiffViewState {
 export interface TerminalViewState {
 	sessionId: string;
 	history: string[];
+	shell: string | null;
+	status: "idle" | "connecting" | "connected" | "exited" | "error";
+	lastExitCode: number | null;
+	lastError: string | null;
+	cols: number;
+	rows: number;
 }
 
 export type ProjectViewState =
@@ -45,12 +61,13 @@ export interface ProjectState {
 
 export interface AppState {
 	projects: Record<string, ProjectState>;
+	terminalSettings: ConfigTerminalSettings;
 	selectedProjectPath: string | null;
 	selectedView: string | null;
 }
 
 export interface AppActions {
-	loadConfig: (projects: ConfigProject[]) => void;
+	loadConfig: (config: ConfigFile) => void;
 	toggleProject: (projectPath: string) => void;
 	selectView: (projectPath: string, viewId: string) => void;
 	addTerminal: (projectPath: string, label: string) => void;

@@ -6,4 +6,10 @@ export const IPC_CHANNELS = {
 	openInVsCode: "project:open-in-vscode",
 	listExplorerFiles: "explorer:list-files",
 	readExplorerFile: "explorer:read-file",
+	createTerminalSession: "terminal:create-session",
+	writeToTerminal: "terminal:write",
+	resizeTerminal: "terminal:resize",
+	closeTerminalSession: "terminal:close-session",
+	terminalData: "terminal:data",
+	terminalExit: "terminal:exit",
 } as const;

@@ -106,10 +106,19 @@ function EmptyState() {
 
 export function DiffView({ projectPath }: { projectPath: string }) {
 	const [state, setState] = useState<ViewState>({ status: "loading" });
+	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
 	const [isDark, setIsDark] = useState(
 		() => window.matchMedia("(prefers-color-scheme: dark)").matches,
 	);
+	const allFiles = state.status === "success" ? state.diff.files : [];
+	const normalizedQuery = searchQuery.trim().toLowerCase();
+	const visibleFiles =
+		normalizedQuery.length === 0
+			? allFiles
+			: allFiles.filter((file) =>
+					file.path.toLowerCase().includes(normalizedQuery),
+				);
 
 	useEffect(() => {
 		const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -168,14 +177,14 @@ export function DiffView({ projectPath }: { projectPath: string }) {
 			return;
 		}
 
-		const hasSelection = state.diff.files.some(
+		const hasSelection = visibleFiles.some(
 			(file) => file.path === selectedFilePath,
 		);
 
 		if (!hasSelection) {
-			setSelectedFilePath(state.diff.files[0]?.path ?? null);
+			setSelectedFilePath(visibleFiles[0]?.path ?? null);
 		}
-	}, [state, selectedFilePath]);
+	}, [state.status, selectedFilePath, visibleFiles]);
 
 	if (state.status === "loading") {
 		return <LoadingState />;
@@ -190,104 +199,128 @@ export function DiffView({ projectPath }: { projectPath: string }) {
 	}
 
 	const selectedFile =
-		state.diff.files.find((file) => file.path === selectedFilePath) ??
-		state.diff.files[0];
-	const language = getLanguage(selectedFile.path);
+		visibleFiles.find((file) => file.path === selectedFilePath) ??
+		visibleFiles[0] ??
+		null;
+	const language = selectedFile ? getLanguage(selectedFile.path) : undefined;
 
 	return (
 		<div className="flex min-h-0 flex-1 overflow-hidden">
-			<aside className="w-64 shrink-0 border-r border-border bg-surface">
-				<ul className="h-full overflow-y-auto">
-					{state.diff.files.map((file) => {
-						const directoryPath = getDirectoryPath(file.path);
-						const statusLabel =
-							file.status === "added"
-								? "A"
-								: file.status === "deleted"
-									? "D"
-									: "M";
-						const statusClassName =
-							file.status === "added"
-								? "bg-green-500/10 text-green-600 dark:text-green-400"
-								: file.status === "deleted"
-									? "bg-red-500/10 text-red-600 dark:text-red-400"
-									: "bg-amber-500/10 text-amber-700 dark:text-amber-400";
-						const isSelected = selectedFile.path === file.path;
+			<aside className="flex w-64 shrink-0 flex-col border-r border-border bg-surface">
+				<div className="border-b border-border">
+					<input
+						type="text"
+						placeholder="Search"
+						value={searchQuery}
+						onChange={(event) => setSearchQuery(event.target.value)}
+						className="w-full rounded-none border-0 bg-surface px-3 py-4 text-xs text-text outline-none placeholder:text-text-subtle"
+					/>
+				</div>
+				{visibleFiles.length === 0 ? (
+					<div className="flex min-h-0 flex-1 items-center justify-center px-4 py-6">
+						<p className="text-xs text-text-subtle">No matches</p>
+					</div>
+				) : (
+					<ul className="min-h-0 flex-1 overflow-y-auto">
+						{visibleFiles.map((file) => {
+							const directoryPath = getDirectoryPath(file.path);
+							const statusLabel =
+								file.status === "added"
+									? "A"
+									: file.status === "deleted"
+										? "D"
+										: "M";
+							const statusClassName =
+								file.status === "added"
+									? "bg-green-500/10 text-green-600 dark:text-green-400"
+									: file.status === "deleted"
+										? "bg-red-500/10 text-red-600 dark:text-red-400"
+										: "bg-amber-500/10 text-amber-700 dark:text-amber-400";
+							const isSelected = selectedFile.path === file.path;
 
-						return (
-							<li key={file.path}>
-								<button
-									type="button"
-									className={`flex w-full items-start gap-2 px-3 py-2 text-left transition ${
-										isSelected ? "bg-surface-muted" : "hover:bg-surface-muted"
-									}`}
-									onClick={() => setSelectedFilePath(file.path)}
-								>
-									<span
-										className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${statusClassName}`}
+							return (
+								<li key={file.path}>
+									<button
+										type="button"
+										className={`flex w-full items-start gap-2 px-3 py-2 text-left transition ${
+											isSelected ? "bg-surface-muted" : "hover:bg-surface-muted"
+										}`}
+										onClick={() => setSelectedFilePath(file.path)}
 									>
-										{statusLabel}
-									</span>
-									<div className="min-w-0 flex-1">
-										<span className="block truncate font-mono text-xs text-text">
-											{getFileName(file.path)}
+										<span
+											className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${statusClassName}`}
+										>
+											{statusLabel}
 										</span>
-										<span className="mt-0.5 block truncate font-mono text-[10px] text-text-subtle">
-											{directoryPath}
-										</span>
-									</div>
-									<div className="mt-0.5 flex shrink-0 items-center gap-2 font-mono text-[10px]">
-										<span className="text-green-600 dark:text-green-400">
-											+{file.additions}
-										</span>
-										<span className="text-red-600 dark:text-red-400">
-											-{file.deletions}
-										</span>
-									</div>
-								</button>
-							</li>
-						);
-					})}
-				</ul>
+										<div className="min-w-0 flex-1">
+											<span className="block truncate font-mono text-xs text-text">
+												{getFileName(file.path)}
+											</span>
+											<span className="mt-0.5 block truncate font-mono text-[10px] text-text-subtle">
+												{directoryPath}
+											</span>
+										</div>
+										<div className="mt-0.5 flex shrink-0 items-center gap-2 font-mono text-[10px]">
+											<span className="text-green-600 dark:text-green-400">
+												+{file.additions}
+											</span>
+											<span className="text-red-600 dark:text-red-400">
+												-{file.deletions}
+											</span>
+										</div>
+									</button>
+								</li>
+							);
+						})}
+					</ul>
+				)}
 			</aside>
 
 			<div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+				{selectedFile === null ? (
+					<div className="flex min-h-0 flex-1 items-center justify-center px-8 py-10">
+						<p className="text-sm text-text-muted">No file selected.</p>
+					</div>
+				) : null}
+
 				<div className="min-h-0 flex-1 border-b border-border">
-					<DiffEditor
-						original={selectedFile.original}
-						modified={selectedFile.modified}
-						language={language}
-						theme={isDark ? "vs-dark" : "vs"}
-						beforeMount={(monaco) => {
-							monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
-								{
-									noSemanticValidation: false,
-									noSyntaxValidation: false,
-									diagnosticCodesToIgnore: [7027],
+					{selectedFile !== null ? (
+						<DiffEditor
+							original={selectedFile.original}
+							modified={selectedFile.modified}
+							language={language}
+							theme={isDark ? "vs-dark" : "vs"}
+							beforeMount={(monaco) => {
+								monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
+									{
+										noSemanticValidation: false,
+										noSyntaxValidation: false,
+										diagnosticCodesToIgnore: [7027],
+									},
+								);
+							}}
+							options={{
+								readOnly: true,
+								renderSideBySide: true,
+								minimap: { enabled: false },
+								scrollBeyondLastLine: false,
+								lineNumbers: "on",
+								stickyScroll: {
+									enabled: false,
 								},
-							);
-						}}
-						options={{
-							readOnly: true,
-							renderSideBySide: true,
-							minimap: { enabled: false },
-							scrollBeyondLastLine: false,
-							lineNumbers: "on",
-							stickyScroll: {
-								enabled: false,
-							},
-							folding: false,
-							wordWrap: "off",
-							diffWordWrap: "off",
-							automaticLayout: true,
-							ignoreTrimWhitespace: false,
-							renderWhitespace: "selection",
-							scrollbar: {
-								vertical: "auto",
-								horizontal: "auto",
-							},
-						}}
-					/>
+								folding: false,
+								wordWrap: "off",
+								diffWordWrap: "off",
+								automaticLayout: true,
+								ignoreTrimWhitespace: false,
+								renderWhitespace: "selection",
+								scrollbar: {
+									vertical: "auto",
+									horizontal: "auto",
+								},
+							}}
+						/>
+					) : null}
 				</div>
 			</div>
 		</div>

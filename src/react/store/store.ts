@@ -1,19 +1,34 @@
 import { create } from "zustand";
-import type { ConfigProject } from "../../shared/contracts";
+import type { ConfigFile, ConfigProject } from "../../shared/contracts";
 import type { AppActions, AppState, ProjectView } from "./types";
 
 type AppStore = AppState & AppActions;
 
 const createInitialState = (): AppState => ({
 	projects: {},
+	terminalSettings: {},
 	selectedProjectPath: null,
 	selectedView: null,
 });
 
+function createInitialTerminalViewState(shell?: string) {
+	return {
+		sessionId: "",
+		history: [],
+		shell: shell ?? null,
+		status: "idle" as const,
+		lastExitCode: null,
+		lastError: null,
+		cols: 0,
+		rows: 0,
+	};
+}
+
 export const useAppStore = create<AppStore>((set, get) => ({
 	...createInitialState(),
 
-	loadConfig: (projects: ConfigProject[]) => {
+	loadConfig: (config: ConfigFile) => {
+		const projects: ConfigProject[] = config.projects;
 		const newProjects: Record<string, AppState["projects"][string]> = {};
 
 		for (const project of projects) {
@@ -51,7 +66,19 @@ export const useAppStore = create<AppStore>((set, get) => ({
 						id: terminalId,
 						label: terminal.name,
 						type: "terminal",
+						shell: terminal.shell,
+						command: terminal.command,
 					});
+				}
+			}
+
+			const terminalViewStates: AppState["projects"][string]["viewStates"]["terminals"] =
+				{};
+			for (const view of views) {
+				if (view.type === "terminal") {
+					terminalViewStates[view.id] = createInitialTerminalViewState(
+						view.shell,
+					);
 				}
 			}
 
@@ -66,13 +93,14 @@ export const useAppStore = create<AppStore>((set, get) => ({
 						leftFile: "",
 						rightFile: "",
 					},
-					terminals: {},
+					terminals: terminalViewStates,
 				},
 			};
 		}
 
 		set({
 			projects: newProjects,
+			terminalSettings: config.terminal ?? {},
 			selectedProjectPath: null,
 			selectedView: null,
 		});
@@ -128,10 +156,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 						...project.viewStates,
 						terminals: {
 							...project.viewStates.terminals,
-							[terminalId]: {
-								sessionId: "",
-								history: [],
-							},
+							[terminalId]: createInitialTerminalViewState(),
 						},
 					},
 				},

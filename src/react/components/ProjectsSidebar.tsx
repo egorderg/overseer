@@ -105,14 +105,6 @@ export function ProjectsSidebar({ projects }: ProjectsSidebarProps) {
 
 	return (
 		<aside className="flex w-80 flex-col border-r border-border bg-surface shadow-sm">
-			<div className="border-b border-border px-4 py-3">
-				<p className="text-[11px] font-medium uppercase tracking-[0.18em] text-text-subtle">
-					Workspace
-				</p>
-				<h2 className="mt-1 text-sm font-semibold tracking-tight text-text">
-					Projects
-				</h2>
-			</div>
 			<ul>
 				{projects.length === 0 ? (
 					<li className="border-b border-dashed border-border bg-surface-muted px-4 py-3 text-sm text-text-subtle">
@@ -125,7 +117,7 @@ export function ProjectsSidebar({ projects }: ProjectsSidebarProps) {
 							className="overflow-hidden border-b border-border bg-surface"
 						>
 							<div
-								className={`relative z-10 flex items-center gap-2 px-2 py-3 text-sm text-text transition ${
+								className={`relative z-10 flex items-center gap-2 px-2 py-2.5 text-sm text-text transition ${
 									project.expanded
 										? "bg-surface shadow-[0_2px_8px_-6px_rgba(15,23,42,0.3)]"
 										: "hover:bg-surface-muted"

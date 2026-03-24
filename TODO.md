@@ -1,25 +1,13 @@
-- empty state when no workspace was found
-
-- browser with multiple links for docs
-- hot reload?
+- hot reload for config?
 - extend open with vscode to open with external editor and path via global config
-- filter in diff and explorer based on name and path
-- what happens when a file changes outside
-- terminal engine via global config like wsl, powershell, bash, fish, ...
 - cmd command for terminals that are long running with a reload button
-- move open vscode from main view to the project
+- reload views -> on the right of the sub entry -> keep filter intact
+- terminals should have a cwd
 
 - cleanup getLanguages
 
 https://stitch.withgoogle.com/projects/4286533101632548947?pli=1
 
-- open project fast in vscode
-- show all projects left
-- save everything in json
-- use central config file
-- dynamic views -> files with code, diffs, cli, terminal, browser
-- fast worktree/pull/push/branch setup
-- browser support
 - validate Electron packaging on macOS and Windows
 
 ## Workflow
@@ -28,5 +16,6 @@ https://stitch.withgoogle.com/projects/4286533101632548947?pli=1
 - openspec
 - opencode/github cli
 
-- cleanup/refactor
+- cleanup -> finds dead code and removes it
+- refactor -> finds code that can be moved/merged
 - organizing code
