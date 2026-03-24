@@ -1,11 +1,10 @@
 - hot reload for config?
-- example config in README
-- cleanup getLanguages
+- add a autostart to the global terminal config if the terminals should not autostart -> big workspaces
+- cleanup getLanguages and general cleanup/refactor
 
 ## Workflow
 
 - use small projects with a single root AGENTS.md that should be under 100 lines and simple, best handwritten
-- openspec
 - opencode/github cli
 
 - create a spec in one step and technical design in another
