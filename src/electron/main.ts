@@ -471,6 +471,7 @@ ipcMain.handle(
 			projectPath?: unknown;
 			terminalId?: unknown;
 			shell?: unknown;
+			cwd?: unknown;
 			settings?: unknown;
 			cols?: unknown;
 			rows?: unknown;
@@ -528,6 +529,52 @@ ipcMain.handle(
 			} as const;
 		}
 
+		if (
+			request.cwd !== undefined &&
+			(typeof request.cwd !== "string" || request.cwd.trim() === "")
+		) {
+			return {
+				ok: false,
+				error: "Invalid terminal cwd.",
+			} as const;
+		}
+
+		if (typeof request.cwd === "string" && path.isAbsolute(request.cwd)) {
+			return {
+				ok: false,
+				error: "Terminal cwd must be a relative path.",
+			} as const;
+		}
+
+		const resolvedTerminalCwd =
+			typeof request.cwd === "string"
+				? path.resolve(resolvedProjectPath, request.cwd)
+				: resolvedProjectPath;
+
+		if (!isSubPath(resolvedProjectPath, resolvedTerminalCwd)) {
+			return {
+				ok: false,
+				error: "Terminal cwd must stay within project path.",
+			} as const;
+		}
+
+		let terminalCwdStats: import("node:fs").Stats;
+		try {
+			terminalCwdStats = await fs.stat(resolvedTerminalCwd);
+		} catch {
+			return {
+				ok: false,
+				error: `Terminal cwd does not exist: ${request.cwd}`,
+			} as const;
+		}
+
+		if (!terminalCwdStats.isDirectory()) {
+			return {
+				ok: false,
+				error: `Terminal cwd is not a folder: ${request.cwd}`,
+			} as const;
+		}
+
 		const cols = typeof request.cols === "number" ? request.cols : 80;
 		const rows = typeof request.rows === "number" ? request.rows : 24;
 		const dimensions = normalizeTerminalDimensions(cols, rows);
@@ -535,6 +582,7 @@ ipcMain.handle(
 		try {
 			const created = terminalSessionManager.createSession({
 				projectPath: resolvedProjectPath,
+				cwd: resolvedTerminalCwd,
 				terminalId,
 				shell: request.shell,
 				settings:

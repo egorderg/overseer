@@ -42,6 +42,7 @@ export async function loadAndValidateConfig(
 
 	const config = parsed as ConfigFile;
 	validateTerminalSettings(config);
+	validateFontSettings(config);
 
 	for (let i = 0; i < config.projects.length; i++) {
 		const project = config.projects[i];
@@ -50,6 +51,41 @@ export async function loadAndValidateConfig(
 	}
 
 	return config;
+}
+
+function validateFontSettings(config: ConfigFile): void {
+	const settings = config.font;
+	if (settings === undefined) {
+		return;
+	}
+
+	if (
+		typeof settings !== "object" ||
+		settings === null ||
+		Array.isArray(settings)
+	) {
+		throw new ConfigLoaderError("Top-level field 'font' must be an object");
+	}
+
+	if (
+		settings.family !== undefined &&
+		(typeof settings.family !== "string" || settings.family.trim() === "")
+	) {
+		throw new ConfigLoaderError(
+			"Top-level field 'font.family' must be a non-empty string",
+		);
+	}
+
+	if (
+		settings.size !== undefined &&
+		(typeof settings.size !== "number" ||
+			!Number.isFinite(settings.size) ||
+			settings.size <= 0)
+	) {
+		throw new ConfigLoaderError(
+			"Top-level field 'font.size' must be a positive number",
+		);
+	}
 }
 
 function validateProject(project: ConfigProject, index: number): void {
@@ -139,6 +175,21 @@ function validateProject(project: ConfigProject, index: number): void {
 			) {
 				throw new ConfigLoaderError(
 					`Project '${project.name}' terminal '${terminal.name}' field 'command' must be a non-empty string`,
+				);
+			}
+
+			if (
+				terminal.cwd !== undefined &&
+				(typeof terminal.cwd !== "string" || terminal.cwd.trim() === "")
+			) {
+				throw new ConfigLoaderError(
+					`Project '${project.name}' terminal '${terminal.name}' field 'cwd' must be a non-empty string`,
+				);
+			}
+
+			if (typeof terminal.cwd === "string" && path.isAbsolute(terminal.cwd)) {
+				throw new ConfigLoaderError(
+					`Project '${project.name}' terminal '${terminal.name}' field 'cwd' must be relative`,
 				);
 			}
 		}

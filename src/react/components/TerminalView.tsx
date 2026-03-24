@@ -2,7 +2,10 @@ import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { ConfigTerminalSettings } from "../../shared/contracts";
+import type {
+	ConfigFontSettings,
+	ConfigTerminalSettings,
+} from "../../shared/contracts";
 import { useProject, useUpdateViewState } from "../store/selectors";
 
 function getTerminalTheme(isDark: boolean) {
@@ -28,14 +31,18 @@ export function TerminalView({
 	terminalId,
 	shell,
 	command,
+	cwd,
 	settings,
+	fontSettings,
 	isActive = true,
 }: {
 	projectPath: string;
 	terminalId: string;
 	shell?: string;
 	command?: string;
+	cwd?: string;
 	settings: ConfigTerminalSettings;
+	fontSettings: ConfigFontSettings;
 	isActive?: boolean;
 }) {
 	const updateViewState = useUpdateViewState();
@@ -89,14 +96,22 @@ export function TerminalView({
 
 		const createTerminalSession = window.overseer.createTerminalSession;
 
-		const terminal = new Terminal({
+		const terminalOptions: ConstructorParameters<typeof Terminal>[0] = {
 			cursorBlink: true,
-			fontFamily: "'Fira Code', 'JetBrains Mono', monospace",
-			fontSize: 13,
 			convertEol: true,
 			scrollback: 4000,
 			theme: getTerminalTheme(isDark),
-		});
+		};
+
+		if (typeof fontSettings.family === "string") {
+			terminalOptions.fontFamily = fontSettings.family;
+		}
+
+		if (typeof fontSettings.size === "number") {
+			terminalOptions.fontSize = fontSettings.size;
+		}
+
+		const terminal = new Terminal(terminalOptions);
 		const fitAddon = new FitAddon();
 		terminal.loadAddon(fitAddon);
 		terminal.open(containerRef.current);
@@ -168,6 +183,7 @@ export function TerminalView({
 				projectPath,
 				terminalId,
 				shell: requestedShell,
+				cwd,
 				settings,
 				cols: terminal.cols,
 				rows: terminal.rows,
@@ -286,6 +302,7 @@ export function TerminalView({
 		};
 	}, [
 		command,
+		cwd,
 		projectPath,
 		requestedShell,
 		settings,
@@ -301,6 +318,23 @@ export function TerminalView({
 
 		terminal.options.theme = getTerminalTheme(isDark);
 	}, [isDark]);
+
+	useEffect(() => {
+		const terminal = terminalRef.current;
+		if (!terminal) {
+			return;
+		}
+
+		if (typeof fontSettings.family === "string") {
+			terminal.options.fontFamily = fontSettings.family;
+		}
+
+		if (typeof fontSettings.size === "number") {
+			terminal.options.fontSize = fontSettings.size;
+		}
+
+		resizeToContainerRef.current?.();
+	}, [fontSettings.family, fontSettings.size]);
 
 	useEffect(() => {
 		if (!isActive) {

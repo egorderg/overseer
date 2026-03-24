@@ -1,6 +1,6 @@
 import { DiffEditor } from "@monaco-editor/react";
 import { useEffect, useState } from "react";
-import type { DiffResult } from "../../shared/contracts";
+import type { ConfigFontSettings, DiffResult } from "../../shared/contracts";
 
 type ViewState =
 	| { status: "loading" }
@@ -104,7 +104,13 @@ function EmptyState() {
 	);
 }
 
-export function DiffView({ projectPath }: { projectPath: string }) {
+export function DiffView({
+	projectPath,
+	fontSettings,
+}: {
+	projectPath: string;
+	fontSettings: ConfigFontSettings;
+}) {
 	const [state, setState] = useState<ViewState>({ status: "loading" });
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
@@ -300,6 +306,12 @@ export function DiffView({ projectPath }: { projectPath: string }) {
 								);
 							}}
 							options={{
+								...(fontSettings.family
+									? { fontFamily: fontSettings.family }
+									: {}),
+								...(typeof fontSettings.size === "number"
+									? { fontSize: fontSettings.size }
+									: {}),
 								readOnly: true,
 								renderSideBySide: true,
 								minimap: { enabled: false },

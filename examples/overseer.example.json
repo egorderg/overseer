@@ -1,38 +1,42 @@
 {
-  "$schema": "../schemas/config.schema.json",
-  "terminal": {
-    "shell": "fish",
-    "shells": {
-      "fish": {
-        "command": "/bin/fish"
-      }
-    }
-  },
-  "projects": [
-    {
-      "path": "/home/egor/Development/mogul",
-      "name": "mogul-old",
-      "explorers": [{ "name": "App", "path": "src" }],
-      "diff": { "enabled": false },
-      "collapsed": true
-    },
-    {
-      "path": "/home/egor/Development/overseer",
-      "name": "overseer",
-      "explorers": [
-        { "name": "Source", "path": "src" },
-        { "name": "Scripts", "path": "scripts" }
-      ],
-      "terminals": [
-        { "name": "Build", "shell": "fish", "command": "ll" },
-        {
-          "name": "AI",
-          "shell": "fish",
-          "command": "opencode"
-        }
-      ],
-      "diff": { "enabled": true },
-      "collapsed": false
-    }
-  ]
+	"$schema": "../schemas/config.schema.json",
+	"font": {
+		"family": "Jetbrains Mono",
+		"size": 13.5
+	},
+	"terminal": {
+		"shell": "fish",
+		"shells": {
+			"fish": {
+				"command": "/bin/fish"
+			}
+		}
+	},
+	"projects": [
+		{
+			"path": "/home/egor/Development/mogul",
+			"name": "mogul-old",
+			"explorers": [{ "name": "App", "path": "src" }],
+			"diff": { "enabled": false },
+			"collapsed": true
+		},
+		{
+			"path": "/home/egor/Development/overseer",
+			"name": "overseer",
+			"explorers": [
+				{ "name": "Source", "path": "src" },
+				{ "name": "Scripts", "path": "scripts" }
+			],
+			"terminals": [
+				{ "name": "Build", "shell": "fish", "command": "ll", "cwd": "src" },
+				{
+					"name": "AI",
+					"shell": "fish",
+					"command": "opencode"
+				}
+			],
+			"diff": { "enabled": true },
+			"collapsed": false
+		}
+	]
 }

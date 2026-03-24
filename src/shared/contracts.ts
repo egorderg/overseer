@@ -24,10 +24,16 @@ export interface ConfigTerminalSettings {
 	shells?: Record<string, ConfigTerminalShell>;
 }
 
+export interface ConfigFontSettings {
+	family?: string;
+	size?: number;
+}
+
 export interface ConfigTerminal {
 	name: string;
 	shell?: string;
 	command?: string;
+	cwd?: string;
 }
 
 export interface ConfigExplorer {
@@ -39,6 +45,7 @@ export interface ConfigExplorer {
 export interface ConfigFile {
 	projects: ConfigProject[];
 	terminal?: ConfigTerminalSettings;
+	font?: ConfigFontSettings;
 }
 
 export type LoadConfigResult =
@@ -105,6 +112,7 @@ export interface CreateTerminalSessionRequest {
 	projectPath: string;
 	terminalId: string;
 	shell?: string;
+	cwd?: string;
 	settings?: ConfigTerminalSettings;
 	cols: number;
 	rows: number;

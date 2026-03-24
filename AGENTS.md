@@ -68,27 +68,26 @@ npm ci
 
 - Full test pipeline: `npm test`
 - Preload contract smoke test: `npm run smoke:preload-contracts`
-- Workspace storage tests: `npm run test:workspace-storage`
 
 ## Running One Test (Single Test Focus)
 
-The primary test file is `scripts/workspace-storage.test.mjs`.
+The primary test file is `scripts/smoke-preload-contracts.mjs`.
 
 - Run one test by name (recommended):
 
 ```bash
-npm run test:workspace-storage -- --test-name-pattern="rejects duplicate"
+npm run test:preload-contracts -- --test-name-pattern="rejects duplicate"
 ```
 
 - Equivalent direct command:
 
 ```bash
-node --test scripts/workspace-storage.test.mjs --test-name-pattern="rejects duplicate"
+node --test scripts/smoke-preload-contracts.mjs --test-name-pattern="rejects duplicate"
 ```
 
 Notes:
 
-- `npm run test:workspace-storage` runs `build:electron` first.
+- `npm run test:preload-contracts` runs `build:electron` first.
 - Use direct `node --test` only if you already built the Electron output.
 
 ## CI Contract

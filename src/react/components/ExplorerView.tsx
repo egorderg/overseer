@@ -1,11 +1,12 @@
 import { Editor } from "@monaco-editor/react";
 import { useEffect, useState } from "react";
-import type { ExplorerFile } from "../../shared/contracts";
+import type { ConfigFontSettings, ExplorerFile } from "../../shared/contracts";
 
 type ExplorerViewProps = {
 	projectPath: string;
 	explorerPath: string;
 	ignore: string[];
+	fontSettings: ConfigFontSettings;
 };
 
 type ListState =
@@ -104,6 +105,7 @@ export function ExplorerView({
 	projectPath,
 	explorerPath,
 	ignore,
+	fontSettings,
 }: ExplorerViewProps) {
 	const [listState, setListState] = useState<ListState>({ status: "loading" });
 	const [searchQuery, setSearchQuery] = useState("");
@@ -357,6 +359,12 @@ export function ExplorerView({
 						language={language}
 						theme={isDark ? "vs-dark" : "vs"}
 						options={{
+							...(fontSettings.family
+								? { fontFamily: fontSettings.family }
+								: {}),
+							...(typeof fontSettings.size === "number"
+								? { fontSize: fontSettings.size }
+								: {}),
 							readOnly: true,
 							minimap: { enabled: false },
 							scrollBeyondLastLine: false,

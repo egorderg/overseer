@@ -1,5 +1,6 @@
 import type {
 	ConfigFile,
+	ConfigFontSettings,
 	ConfigProject,
 	ConfigTerminalSettings,
 } from "../../shared/contracts";
@@ -19,6 +20,7 @@ export type ProjectView =
 			type: "terminal";
 			shell?: string;
 			command?: string;
+			cwd?: string;
 	  };
 
 export interface ExplorerViewState {
@@ -62,6 +64,7 @@ export interface ProjectState {
 export interface AppState {
 	projects: Record<string, ProjectState>;
 	terminalSettings: ConfigTerminalSettings;
+	fontSettings: ConfigFontSettings;
 	selectedProjectPath: string | null;
 	selectedView: string | null;
 }

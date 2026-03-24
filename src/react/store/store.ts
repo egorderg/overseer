@@ -7,6 +7,7 @@ type AppStore = AppState & AppActions;
 const createInitialState = (): AppState => ({
 	projects: {},
 	terminalSettings: {},
+	fontSettings: {},
 	selectedProjectPath: null,
 	selectedView: null,
 });
@@ -68,6 +69,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 						type: "terminal",
 						shell: terminal.shell,
 						command: terminal.command,
+						cwd: terminal.cwd,
 					});
 				}
 			}
@@ -101,6 +103,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 		set({
 			projects: newProjects,
 			terminalSettings: config.terminal ?? {},
+			fontSettings: config.font ?? {},
 			selectedProjectPath: null,
 			selectedView: null,
 		});

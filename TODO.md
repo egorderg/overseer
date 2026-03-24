@@ -1,8 +1,6 @@
 - hot reload for config?
-- extend open with vscode to open with external editor and path via global config
 - cmd command for terminals that are long running with a reload button
 - reload views -> on the right of the sub entry -> keep filter intact
-- terminals should have a cwd
 
 - cleanup getLanguages
 
@@ -17,5 +15,4 @@ https://stitch.withgoogle.com/projects/4286533101632548947?pli=1
 - opencode/github cli
 
 - cleanup -> finds dead code and removes it
-- refactor -> finds code that can be moved/merged
-- organizing code
+- refactor -> finds code that can be moved/merged, organizing code like moving to different directories and creating folders

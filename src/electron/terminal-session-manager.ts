@@ -9,6 +9,7 @@ import { IPC_CHANNELS } from "./contracts";
 
 export interface CreateTerminalSessionInput {
 	projectPath: string;
+	cwd: string;
 	terminalId: string;
 	shell?: string;
 	settings?: ConfigTerminalSettings;
@@ -89,7 +90,7 @@ export class TerminalSessionManager {
 
 		const pty = spawn(command, args, {
 			name: "xterm-256color",
-			cwd: input.projectPath,
+			cwd: input.cwd,
 			env,
 			cols: Math.max(20, Math.floor(input.cols)),
 			rows: Math.max(8, Math.floor(input.rows)),

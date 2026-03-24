@@ -26,6 +26,8 @@ export const useSelectedView = () => useAppStore((state) => state.selectedView);
 export const useTerminalSettings = () =>
 	useAppStore((state) => state.terminalSettings);
 
+export const useFontSettings = () => useAppStore((state) => state.fontSettings);
+
 export const useCurrentView = () => {
 	const selectedProjectPath = useSelectedProjectPath();
 	const selectedView = useSelectedView();

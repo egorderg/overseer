@@ -1,5 +1,6 @@
 import {
 	useCurrentView,
+	useFontSettings,
 	useProjects,
 	useTerminalSettings,
 } from "../store/selectors";
@@ -11,6 +12,7 @@ export function MainContent() {
 	const currentView = useCurrentView();
 	const projects = useProjects();
 	const terminalSettings = useTerminalSettings();
+	const fontSettings = useFontSettings();
 	const terminalViews = Object.values(projects).flatMap((project) =>
 		project.views
 			.filter((view) => view.type === "terminal")
@@ -19,6 +21,7 @@ export function MainContent() {
 				terminalId: view.id,
 				shell: view.shell,
 				command: view.command,
+				cwd: view.cwd,
 			})),
 	);
 
@@ -85,10 +88,13 @@ export function MainContent() {
 					projectPath={project.path}
 					explorerPath={view.path}
 					ignore={view.ignore}
+					fontSettings={fontSettings}
 				/>
 			);
 		} else if (view.type === "diff") {
-			content = <DiffView projectPath={project.path} />;
+			content = (
+				<DiffView projectPath={project.path} fontSettings={fontSettings} />
+			);
 		}
 	}
 
@@ -117,7 +123,9 @@ export function MainContent() {
 								terminalId={terminalView.terminalId}
 								shell={terminalView.shell}
 								command={terminalView.command}
+								cwd={terminalView.cwd}
 								settings={terminalSettings}
+								fontSettings={fontSettings}
 								isActive={isActive}
 							/>
 						</div>

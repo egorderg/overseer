@@ -3,34 +3,13 @@
   "autoupdate": false,
   "share": "disabled",
   "small_model": "openai/gpt-5.1-codex-mini",
-  "enabled_providers": ["openai", "ollama", "openrouter"],
+  "enabled_providers": ["openai", "openrouter"],
   "permission": {
     "bash": "ask"
   },
   "formatter": {
     "biome": {
       "disabled": false
-    }
-  },
-  "mcp": {
-    "shadcn": {
-      "type": "local",
-      "command": ["bunx", "shadcn", "mcp"],
-      "enabled": true
-    }
-  },
-  "provider": {
-    "ollama": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Ollama",
-      "options": {
-        "baseURL": "http://localhost:11434/v1"
-      },
-      "models": {
-        "mdq100/Qwen3-Coder-30B-A3B-Instruct:30b": {
-          "name": "Qwen3"
-        }
-      }
     }
   }
 }
