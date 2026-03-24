@@ -21,7 +21,11 @@
 		"typecheck:electron": "tsc -p tsconfig.electron.json --noEmit",
 		"typecheck:renderer": "tsc -p tsconfig.renderer.json --noEmit",
 		"typecheck:react": "tsc -p tsconfig.react.json --noEmit",
-		"test": "npm run typecheck && npm run smoke:preload-contracts"
+		"test": "npm run typecheck && npm run smoke:preload-contracts",
+		"dist": "npm run build && electron-builder",
+		"dist:mac": "npm run build && electron-builder --mac --x64 --arm64",
+		"dist:win": "npm run build && electron-builder --win --x64",
+		"dist:linux": "npm run build && electron-builder --linux --x64"
 	},
 	"dependencies": {
 		"@monaco-editor/react": "^4.7.0",
@@ -43,10 +47,43 @@
 		"concurrently": "^9.2.1",
 		"cross-env": "^10.1.0",
 		"electron": "^41.0.3",
+		"electron-builder": "^26.8.1",
 		"postcss": "^8.5.6",
 		"tailwindcss": "^3.4.18",
 		"typescript": "^5.9.2",
 		"vite": "^7.1.11",
 		"wait-on": "^9.0.3"
+	},
+	"build": {
+		"appId": "com.egordergunov.overseer",
+		"productName": "Overseer",
+		"directories": {
+			"output": "release"
+		},
+		"files": [
+			"dist/**/*",
+			"package.json"
+		],
+		"asarUnpack": [
+			"**/*.node"
+		],
+		"mac": {
+			"target": [
+				"dir"
+			]
+		},
+		"win": {
+			"target": [
+				"portable"
+			],
+			"artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
+		},
+		"linux": {
+			"target": [
+				"AppImage"
+			],
+			"category": "Development",
+			"artifactName": "${productName}-${version}-${arch}.${ext}"
+		}
 	}
 }

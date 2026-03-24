@@ -1,0 +1,142 @@
+name: Bundle
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    name: Bundle (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos
+            os: macos-latest
+            command: npm run dist:mac
+            binary_pattern: "*.app"
+            binary_type: dir
+          - name: windows
+            os: windows-latest
+            command: npm run dist:win
+            binary_pattern: "*.exe"
+            binary_type: file
+          - name: linux
+            os: ubuntu-latest
+            command: npm run dist:linux
+            binary_pattern: "*.AppImage"
+            binary_type: file
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build bundle
+        run: ${{ matrix.command }}
+
+      - name: Create bundle archives with schema
+        if: matrix.binary_type == 'file'
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          import zipfile
+
+          release_dir = Path("release")
+          bundle_dir = release_dir / "bundles"
+          bundle_dir.mkdir(parents=True, exist_ok=True)
+
+          binary_pattern = "${{ matrix.binary_pattern }}"
+          binary_type = "${{ matrix.binary_type }}"
+          schema_path = Path("schemas/config.schema.json")
+          if not schema_path.is_file():
+              raise SystemExit(f"Schema file not found: {schema_path}")
+
+          binaries = []
+          for candidate in release_dir.rglob(binary_pattern):
+              if binary_type == "dir" and candidate.is_dir():
+                  binaries.append(candidate)
+              if binary_type == "file" and candidate.is_file():
+                  binaries.append(candidate)
+
+          if not binaries:
+              raise SystemExit(f"No binaries found for pattern {binary_pattern}")
+
+          for binary_path in binaries:
+              parent_name = binary_path.parent.name
+              binary_name = binary_path.name
+              archive_name = f"{binary_path.stem}-{parent_name}.zip"
+              archive_path = bundle_dir / archive_name
+
+              with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                  if binary_path.is_dir():
+                      for child in binary_path.rglob("*"):
+                          if child.is_file():
+                              arcname = Path(binary_name) / child.relative_to(binary_path)
+                              archive.write(child, arcname.as_posix())
+                  else:
+                      archive.write(binary_path, binary_name)
+
+                  archive.write(schema_path, "config.schema.json")
+          PY
+
+      - name: Create macOS app archives with schema
+        if: matrix.binary_type == 'dir'
+        shell: bash
+        run: |
+          mkdir -p release/bundles
+          while IFS= read -r -d '' app_dir; do
+            app_name="$(basename "$app_dir")"
+            parent_name="$(basename "$(dirname "$app_dir")")"
+            bundle_name="${app_name%.app}-${parent_name}"
+            archive_name="${bundle_name}.zip"
+            stage_root="$(mktemp -d)"
+            bundle_dir="$stage_root/$bundle_name"
+            mkdir -p "$bundle_dir"
+            ditto "$app_dir" "$bundle_dir/$app_name"
+            cp schemas/config.schema.json "$bundle_dir/config.schema.json"
+            ditto -c -k --sequesterRsrc --keepParent "$bundle_dir" "release/bundles/$archive_name"
+            rm -rf "$stage_root"
+          done < <(find release -type d -name "*.app" -print0)
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: overseer-${{ matrix.name }}
+          path: release/bundles/*.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish Release Assets
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    needs: bundle
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Attach bundles to GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            artifacts/**/*.zip

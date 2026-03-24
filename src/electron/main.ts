@@ -15,7 +15,8 @@ import {
 
 const DEV_SERVER_URL =
 	process.env.ELECTRON_RENDERER_URL ?? "http://localhost:5173";
-const isDevelopment = process.env.NODE_ENV !== "production";
+const isDevelopment =
+	!app.isPackaged && typeof process.env.ELECTRON_RENDERER_URL === "string";
 const execFileAsync = promisify(execFile);
 const MAX_EXPLORER_FILE_SIZE_BYTES = 1024 * 1024;
 const terminalSessionManager = new TerminalSessionManager();
