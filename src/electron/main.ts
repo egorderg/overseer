@@ -472,6 +472,7 @@ ipcMain.handle(
 			terminalId?: unknown;
 			shell?: unknown;
 			cwd?: unknown;
+			forceRestart?: unknown;
 			settings?: unknown;
 			cols?: unknown;
 			rows?: unknown;
@@ -539,6 +540,16 @@ ipcMain.handle(
 			} as const;
 		}
 
+		if (
+			request.forceRestart !== undefined &&
+			typeof request.forceRestart !== "boolean"
+		) {
+			return {
+				ok: false,
+				error: "Invalid terminal restart flag.",
+			} as const;
+		}
+
 		if (typeof request.cwd === "string" && path.isAbsolute(request.cwd)) {
 			return {
 				ok: false,
@@ -585,6 +596,7 @@ ipcMain.handle(
 				cwd: resolvedTerminalCwd,
 				terminalId,
 				shell: request.shell,
+				forceRestart: request.forceRestart,
 				settings:
 					typeof request.settings === "object" && request.settings !== null
 						? (request.settings as {

@@ -13,6 +13,8 @@ export const useToggleProject = () =>
 
 export const useSelectView = () => useAppStore((state) => state.selectView);
 
+export const useReloadView = () => useAppStore((state) => state.reloadView);
+
 export const useAddTerminal = () => useAppStore((state) => state.addTerminal);
 
 export const useUpdateViewState = () =>

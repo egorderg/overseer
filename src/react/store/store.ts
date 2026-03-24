@@ -22,6 +22,7 @@ function createInitialTerminalViewState(shell?: string) {
 		lastError: null,
 		cols: 0,
 		rows: 0,
+		reloadNonce: 0,
 	};
 }
 
@@ -34,10 +35,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
 		for (const project of projects) {
 			const views: ProjectView[] = [];
-			const explorerViewStates: Record<
-				string,
-				{ expandedFolders: string[]; selectedFile: string | null }
-			> = {};
+			const explorerViewStates: AppState["projects"][string]["viewStates"]["explorers"] =
+				{};
 
 			if (project.explorers) {
 				for (const explorer of project.explorers) {
@@ -52,6 +51,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 					explorerViewStates[explorerId] = {
 						expandedFolders: [],
 						selectedFile: null,
+						reloadNonce: 0,
 					};
 				}
 			}
@@ -94,6 +94,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 					diff: {
 						leftFile: "",
 						rightFile: "",
+						reloadNonce: 0,
 					},
 					terminals: terminalViewStates,
 				},
@@ -136,6 +137,68 @@ export const useAppStore = create<AppStore>((set, get) => ({
 		set({
 			selectedProjectPath: projectPath,
 			selectedView: viewId,
+		});
+	},
+
+	reloadView: (projectPath, viewId) => {
+		const state = get();
+		const project = state.projects[projectPath];
+		if (!project) return;
+
+		let updatedViewStates;
+
+		if (viewId.startsWith("explorer-")) {
+			const currentExplorerState = project.viewStates.explorers[viewId];
+			if (!currentExplorerState) {
+				return;
+			}
+
+			updatedViewStates = {
+				...project.viewStates,
+				explorers: {
+					...project.viewStates.explorers,
+					[viewId]: {
+						...currentExplorerState,
+						reloadNonce: currentExplorerState.reloadNonce + 1,
+					},
+				},
+			};
+		} else if (viewId === "diff") {
+			updatedViewStates = {
+				...project.viewStates,
+				diff: {
+					...project.viewStates.diff,
+					reloadNonce: project.viewStates.diff.reloadNonce + 1,
+				},
+			};
+		} else if (viewId.startsWith("terminal-")) {
+			const terminalState = project.viewStates.terminals[viewId];
+			if (!terminalState) {
+				return;
+			}
+
+			updatedViewStates = {
+				...project.viewStates,
+				terminals: {
+					...project.viewStates.terminals,
+					[viewId]: {
+						...terminalState,
+						reloadNonce: terminalState.reloadNonce + 1,
+					},
+				},
+			};
+		} else {
+			return;
+		}
+
+		set({
+			projects: {
+				...state.projects,
+				[projectPath]: {
+					...project,
+					viewStates: updatedViewStates,
+				},
+			},
 		});
 	},
 

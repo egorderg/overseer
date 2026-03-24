@@ -7,6 +7,7 @@ type ExplorerViewProps = {
 	explorerPath: string;
 	ignore: string[];
 	fontSettings: ConfigFontSettings;
+	reloadNonce: number;
 };
 
 type ListState =
@@ -106,6 +107,7 @@ export function ExplorerView({
 	explorerPath,
 	ignore,
 	fontSettings,
+	reloadNonce,
 }: ExplorerViewProps) {
 	const [listState, setListState] = useState<ListState>({ status: "loading" });
 	const [searchQuery, setSearchQuery] = useState("");
@@ -187,7 +189,7 @@ export function ExplorerView({
 		return () => {
 			isMounted = false;
 		};
-	}, [projectPath, explorerPath, ignore]);
+	}, [projectPath, explorerPath, ignore, reloadNonce]);
 
 	useEffect(() => {
 		if (listState.status !== "success") {
@@ -265,7 +267,7 @@ export function ExplorerView({
 		return () => {
 			isMounted = false;
 		};
-	}, [projectPath, explorerPath, selectedFilePath]);
+	}, [projectPath, explorerPath, selectedFilePath, reloadNonce]);
 
 	if (listState.status === "loading") {
 		return <LoadingState />;

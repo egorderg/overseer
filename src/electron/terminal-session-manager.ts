@@ -12,6 +12,7 @@ export interface CreateTerminalSessionInput {
 	cwd: string;
 	terminalId: string;
 	shell?: string;
+	forceRestart?: boolean;
 	settings?: ConfigTerminalSettings;
 	cols: number;
 	rows: number;
@@ -59,11 +60,15 @@ export class TerminalSessionManager {
 		if (existingSessionId) {
 			const existingSession = this.sessionsById.get(existingSessionId);
 			if (existingSession) {
-				return {
-					sessionId: existingSession.id,
-					shell: resolvedShellName,
-					reused: true,
-				};
+				if (input.forceRestart) {
+					this.close(existingSession.id);
+				} else {
+					return {
+						sessionId: existingSession.id,
+						shell: resolvedShellName,
+						reused: true,
+					};
+				}
 			}
 
 			this.sessionIdByTerminalKey.delete(terminalKey);

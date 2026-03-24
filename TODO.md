@@ -1,11 +1,5 @@
 - hot reload for config?
-- cmd command for terminals that are long running with a reload button
-- reload views -> on the right of the sub entry -> keep filter intact
-
 - cleanup getLanguages
-
-https://stitch.withgoogle.com/projects/4286533101632548947?pli=1
-
 - validate Electron packaging on macOS and Windows
 
 ## Workflow
@@ -14,5 +8,9 @@ https://stitch.withgoogle.com/projects/4286533101632548947?pli=1
 - openspec
 - opencode/github cli
 
+- create a spec in one step and technical design in another
+
 - cleanup -> finds dead code and removes it
 - refactor -> finds code that can be moved/merged, organizing code like moving to different directories and creating folders
+
+- add a sub agent that updates the MEMORY.md or AGENTS.md based on the content

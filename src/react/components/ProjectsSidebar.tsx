@@ -4,10 +4,12 @@ import {
 	Code2,
 	FileDiff,
 	FolderOpen,
+	RotateCw,
 	Terminal,
 } from "lucide-react";
 import { useState } from "react";
 import {
+	useReloadView,
 	useSelectedProjectPath,
 	useSelectedView,
 	useSelectView,
@@ -22,6 +24,7 @@ type ProjectsSidebarProps = {
 export function ProjectsSidebar({ projects }: ProjectsSidebarProps) {
 	const toggleProject = useToggleProject();
 	const selectView = useSelectView();
+	const reloadView = useReloadView();
 	const selectedProjectPath = useSelectedProjectPath();
 	const selectedView = useSelectedView();
 	const [openInVsCodeErrors, setOpenInVsCodeErrors] = useState<
@@ -84,7 +87,7 @@ export function ProjectsSidebar({ projects }: ProjectsSidebarProps) {
 		const isSelected =
 			selectedProjectPath === projectPath && selectedView === viewId;
 
-		return `w-full border-l-4 ml-0.5 py-1.5 pl-8 pr-4 text-left text-sm transition focus:outline-none ${
+		return `flex-1 border-l-4 ml-0.5 py-1.5 pl-8 pr-2 text-left text-sm transition focus:outline-none ${
 			isSelected
 				? "border-primary font-medium text-text"
 				: "border-transparent font-medium text-text hover:text-text"
@@ -166,18 +169,32 @@ export function ProjectsSidebar({ projects }: ProjectsSidebarProps) {
 													{group.views.map((view) => {
 														return (
 															<li key={view.id}>
-																<button
-																	type="button"
-																	className={getSubEntryClassName(
-																		project.path,
-																		view.id,
-																	)}
-																	onClick={() =>
-																		selectView(project.path, view.id)
-																	}
-																>
-																	{view.label}
-																</button>
+																<div className="group flex items-center gap-1 pr-2">
+																	<button
+																		type="button"
+																		className={getSubEntryClassName(
+																			project.path,
+																			view.id,
+																		)}
+																		onClick={() =>
+																			selectView(project.path, view.id)
+																		}
+																	>
+																		{view.label}
+																	</button>
+																	<button
+																		type="button"
+																		onClick={(event) => {
+																			event.stopPropagation();
+																			reloadView(project.path, view.id);
+																		}}
+																		title={`Reload ${view.label}`}
+																		aria-label={`Reload ${view.label}`}
+																		className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-text-muted opacity-0 pointer-events-none transition hover:bg-surface-muted hover:text-text group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto"
+																	>
+																		<RotateCw className="h-3.5 w-3.5" />
+																	</button>
+																</div>
 															</li>
 														);
 													})}

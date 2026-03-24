@@ -113,6 +113,7 @@ export interface CreateTerminalSessionRequest {
 	terminalId: string;
 	shell?: string;
 	cwd?: string;
+	forceRestart?: boolean;
 	settings?: ConfigTerminalSettings;
 	cols: number;
 	rows: number;

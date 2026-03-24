@@ -32,6 +32,7 @@ export function TerminalView({
 	shell,
 	command,
 	cwd,
+	reloadNonce,
 	settings,
 	fontSettings,
 	isActive = true,
@@ -41,6 +42,7 @@ export function TerminalView({
 	shell?: string;
 	command?: string;
 	cwd?: string;
+	reloadNonce: number;
 	settings: ConfigTerminalSettings;
 	fontSettings: ConfigFontSettings;
 	isActive?: boolean;
@@ -179,11 +181,14 @@ export function TerminalView({
 		});
 
 		createSessionTimeoutId = window.setTimeout(() => {
+			const forceRestart = reloadNonce > 0;
+
 			void createTerminalSession({
 				projectPath,
 				terminalId,
 				shell: requestedShell,
 				cwd,
+				forceRestart,
 				settings,
 				cols: terminal.cols,
 				rows: terminal.rows,
@@ -308,6 +313,7 @@ export function TerminalView({
 		settings,
 		terminalId,
 		updateViewState,
+		reloadNonce,
 	]);
 
 	useEffect(() => {

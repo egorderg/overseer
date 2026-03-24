@@ -22,6 +22,7 @@ export function MainContent() {
 				shell: view.shell,
 				command: view.command,
 				cwd: view.cwd,
+				reloadNonce: project.viewStates.terminals[view.id]?.reloadNonce ?? 0,
 			})),
 	);
 
@@ -83,17 +84,27 @@ export function MainContent() {
 				</div>
 			);
 		} else if (view.type === "explorer") {
+			const explorerReloadNonce =
+				project.viewStates.explorers[view.id]?.reloadNonce ?? 0;
+
 			content = (
 				<ExplorerView
 					projectPath={project.path}
 					explorerPath={view.path}
 					ignore={view.ignore}
 					fontSettings={fontSettings}
+					reloadNonce={explorerReloadNonce}
 				/>
 			);
 		} else if (view.type === "diff") {
+			const diffReloadNonce = project.viewStates.diff.reloadNonce;
+
 			content = (
-				<DiffView projectPath={project.path} fontSettings={fontSettings} />
+				<DiffView
+					projectPath={project.path}
+					fontSettings={fontSettings}
+					reloadNonce={diffReloadNonce}
+				/>
 			);
 		}
 	}
@@ -124,6 +135,7 @@ export function MainContent() {
 								shell={terminalView.shell}
 								command={terminalView.command}
 								cwd={terminalView.cwd}
+								reloadNonce={terminalView.reloadNonce}
 								settings={terminalSettings}
 								fontSettings={fontSettings}
 								isActive={isActive}

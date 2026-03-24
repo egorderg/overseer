@@ -26,11 +26,13 @@ export type ProjectView =
 export interface ExplorerViewState {
 	expandedFolders: string[];
 	selectedFile: string | null;
+	reloadNonce: number;
 }
 
 export interface DiffViewState {
 	leftFile: string;
 	rightFile: string;
+	reloadNonce: number;
 }
 
 export interface TerminalViewState {
@@ -42,6 +44,7 @@ export interface TerminalViewState {
 	lastError: string | null;
 	cols: number;
 	rows: number;
+	reloadNonce: number;
 }
 
 export type ProjectViewState =
@@ -73,6 +76,7 @@ export interface AppActions {
 	loadConfig: (config: ConfigFile) => void;
 	toggleProject: (projectPath: string) => void;
 	selectView: (projectPath: string, viewId: string) => void;
+	reloadView: (projectPath: string, viewId: string) => void;
 	addTerminal: (projectPath: string, label: string) => void;
 	updateViewState: (
 		projectPath: string,

@@ -107,9 +107,11 @@ function EmptyState() {
 export function DiffView({
 	projectPath,
 	fontSettings,
+	reloadNonce,
 }: {
 	projectPath: string;
 	fontSettings: ConfigFontSettings;
+	reloadNonce: number;
 }) {
 	const [state, setState] = useState<ViewState>({ status: "loading" });
 	const [searchQuery, setSearchQuery] = useState("");
@@ -175,7 +177,7 @@ export function DiffView({
 		return () => {
 			isMounted = false;
 		};
-	}, [projectPath]);
+	}, [projectPath, reloadNonce]);
 
 	useEffect(() => {
 		if (state.status !== "success") {
